@@ -1,14 +1,21 @@
 import * as antlr4 from 'antlr4';
-import * as TodoLexer from './todoLexer';
-import * as TodoParser from './todoParser';
+import { VillanelleGrammarLexer } from './VillanelleGrammarLexer';
+import { VillanelleGrammarParser } from './VillanelleGrammarParser';
+import { VillanelleGrammarVisitorImpl } from './VillanelleGrammarVisitorImpl';
 
 export function parse() {
     console.log('antlr parsing')
-    var str = '* play with antlr4\n';
-    var is = new antlr4.InputStream(str);
-    var lexer = new TodoLexer.todoLexer(is);
-    var tokens = new antlr4.CommonTokenStream(lexer);
-    var parser = new TodoParser.todoParser(tokens);
-    var tree: antlr4.ElementsContext = parser.elements();
-    console.log(tree.children); //.children[0].children[2].getText()
+    let str = "b=2\na = b\nc= a==b\n";
+    let is = new antlr4.InputStream(str);
+    let lexer = new VillanelleGrammarLexer(is);
+    let tokens = new antlr4.CommonTokenStream(lexer);
+    let parser = new VillanelleGrammarParser(tokens);
+    let tree = parser.prog();
+    var visitor = new VillanelleGrammarVisitorImpl();
+    //TODO change to prog
+    let lambdas = visitor.visitProg(tree);
+    lambdas[0]();
+    lambdas[1]();
+    lambdas[2]();
+    console.log(visitor.variables);
 }

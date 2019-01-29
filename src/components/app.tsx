@@ -18,7 +18,7 @@ export class App extends React.Component<{}, { currentTab: string }> {
     //yaml test
     try {
       var doc = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, "../test.yml"), 'utf8'));
-      console.log(doc);
+      //console.log(doc);
     } catch (e) {
       console.log(e);
     }

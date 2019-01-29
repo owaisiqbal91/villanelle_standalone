@@ -59,7 +59,7 @@ const createWindow = async () => {
     }
   });
 
-  globalShortcut.register('CommandOrControl+W', close);
+  //globalShortcut.register('CommandOrControl+W', close);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', close);

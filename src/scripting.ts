@@ -259,7 +259,6 @@ export class Agent {
 
     constructor(public name: string) {
         this.name = name;
-        console.log(this.name + " constructor")
     }
 
     setCurrentLocation(currentlocation: string) {
@@ -271,7 +270,7 @@ export class Agent {
             () => true,
             () => {
                 this.currentLocation = getNextLocation(this.currentLocation, this.destination);
-                console.log(this.name, ' at: ', this.currentLocation);
+                //console.log(this.name, ' at: ', this.currentLocation);
             },
             0
         );
@@ -296,7 +295,7 @@ export class Agent {
 
     hasSeenItem(item: Item) {
         if (item.name in this.lastSeenItem) {
-            console.log(this.name + ': saw item:' + item.name);
+            //console.log(this.name + ': saw item:' + item.name);
             return true; //this.lastSeenItem[item.name]
         }
         return false;
@@ -304,7 +303,7 @@ export class Agent {
 
     whereIsItem(item: Item) {
         if (item.name in this.lastSeenItem) {
-            console.log(this.name + ': saw item:' + item.name + ' at location:' + this.lastSeenItem[item.name]);
+            //console.log(this.name + ': saw item:' + item.name + ' at location:' + this.lastSeenItem[item.name]);
             return this.lastSeenItem[item.name]
         }
         return false;
@@ -318,7 +317,7 @@ var agents: Array<Agent> = new Array<Agent>();
 export function addAgent(agentName: string) {
     // console.log("Adding: "+agentName);
     var agent = new Agent(agentName);
-    console.log(agent);
+    //console.log(agent);
     agents.push(agent);
     return agent;
 }
