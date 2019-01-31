@@ -1,0 +1,38 @@
+Initialization:
+  - AskedBella = false
+  - Intelligence = 4
+  - Fangs = true
+
+Bella:
+  selector:
+    - condition: Intelligence >= 4 and Fangs == true #precondition for the action below
+      effects: 
+        - BellaLikesYou = true
+      ticks: 0 #optional
+    - condition: AskedBella == true #this is a guard for the selector below
+      selector:
+        - condition: Fangs == false
+          effectText: "Ew, you don't even have fangs.."
+          effects:
+            - AskedBella = false
+            - NeedToSharpenTeeth = true
+          ticks: 0 #optional
+        - condition: Intelligence < 4
+          effectText: "Sorry, I only like intelligent guys.."
+          effects:
+            - AskedBella = false
+
+# User Interaction:
+#   DateFound == false:
+#     - description: "Prom is approaching! You need to have a date! Bella or Jacobine..."
+#     - addUserAction:
+#         actionText: "Ask Bella to Prom"
+#         Effect Tree:
+#           selector:
+#             - BellaLikesYou == true:
+#                 effectText: 'Bella swoons and turns into a bat. Congratulations, you have a date!'
+#                 effect:
+#                   - DateFound = true
+#             - BellaLikesYou == false:
+#                 effect:
+#                   AskedBella = true
