@@ -30,7 +30,7 @@ stat: expr NEWLINE
 | NEWLINE
 ;
 
-assign: left=ID '=' right=expr NEWLINE;
+assign: left=ID ':=' right=expr NEWLINE;
 
 bool: BOOL;
 

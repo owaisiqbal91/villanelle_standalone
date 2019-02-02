@@ -5,12 +5,13 @@ import { VillanelleGrammarVisitorImpl } from './VillanelleGrammarVisitorImpl';
 
 let visitor = new VillanelleGrammarVisitorImpl();
 
-export function parseEffects(str: string): () => {} {
+export function parseEffects(str: string) {
     let parser = getParser(str);
     let tree = parser.prog();
     let lambdas = visitor.visitProg(tree);
 
-    return () => lambdas.forEach(lambda => lambda());
+    return lambdas;
+    //return () => lambdas.forEach(lambda => lambda());
 }
 
 export function parseCondition(str: string): () => boolean {

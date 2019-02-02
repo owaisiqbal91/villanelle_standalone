@@ -1,6 +1,6 @@
 import { Button, ButtonGroup, Callout, Card, ControlGroup, Divider, Intent } from '@blueprintjs/core';
 import * as React from 'react';
-import { getUIO } from '../game';
+import { getUIO } from '../villanelle_game';
 import {executeUserAction, worldTick} from '../scripting';
 
 export class VillanellePlayArea extends React.Component<{}, { uio: any }> {

@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as scripting from '../../scripting';
 import * as antlr_parser from '../../parsing/antlr/antlr_parser';
 
-let reservedKeywords = ['Initialization', 'UserInteraction'];
+let reservedKeywords = ['Initialization', 'User Interaction'];
 
 export function parse() {
     try {
@@ -20,14 +20,17 @@ export function parse() {
         }
 
         if (doc['Initialization'] !== undefined) {
-            let initializationLambda = visitEffects(doc['Initialization']);
+            let initializationLambda = () => visitEffects(doc['Initialization']).forEach(lambda => lambda());
             initializationLambda();
+        }
+
+        if (doc['User Interaction'] !== undefined) {
+            var userInteractionArr = doc['User Interaction'];
+            userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj)));
         }
 
         scripting.initialize();
         scripting.worldTick();
-
-        console.log(scripting.getVariable('BellaLikesYou'));
     } catch (e) {
         console.log(e);
     }
@@ -39,6 +42,25 @@ function visitObject(obj: {}) {
     let sequence = obj['sequence'] !== undefined;
     let selector = obj['selector'] !== undefined;
     let effects = obj['effects'] !== undefined;
+    let effectsText = obj['effect text'] !== undefined;
+
+    var conditionLambda: () => boolean = () => true;
+    if (condition) {
+        //get condition here
+        conditionLambda = visitCondition(obj['condition']);
+    }
+
+    //user interaction
+    let description = obj['description'] !== undefined;
+    if (description) {
+        let descriptionAction = scripting.displayDescriptionAction(obj['description']);
+        return condition ? scripting.guard(conditionLambda, descriptionAction) : descriptionAction;
+    }
+    let userAction = obj['user action'] !== undefined;
+    if (userAction) {
+        let userAction = visitUserAction(obj['user action']);
+        return condition ? scripting.guard(conditionLambda, userAction) : userAction;
+    }
 
     var sequenceOrSelectorTick;
     if (sequence && selector) {
@@ -50,14 +72,18 @@ function visitObject(obj: {}) {
         sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector']));
     }
 
-    var effectsLambda = effects ? visitEffects(obj['effects']) : null;
+    var effectsLambda;
+    if (effects) {
+        var lambdas = visitEffects(obj['effects']);
+        if (effectsText) {
+            lambdas.push(() => scripting.displayActionEffectText(obj['effect text']));
+        }
+        effectsLambda = () => lambdas.forEach(lambda => lambda());
+    }
 
     if (condition) {
-        //get condition here
-        let conditionLambda: () => boolean = visitCondition(obj['condition']);
-
         //action
-        if (!sequence && !selector) {
+        if (effects) {
             return scripting.action(conditionLambda, effectsLambda, obj['ticks']);
         } else {//guard
             return scripting.guard(conditionLambda, sequenceOrSelectorTick);
@@ -73,11 +99,22 @@ function visitArray(arr: []): any[] {
     return arr.map(obj => visitObject(obj));
 }
 
-function visitEffects(arr: []): () => {} {
-    let statements = arr.join('\n');
-    return antlr_parser.parseEffects(statements + "\n");
+function visitEffects(arr: []) {
+    if (arr !== null) {
+        let statements = arr.join('\n');
+        return antlr_parser.parseEffects(statements + "\n");
+    } else {//no effects, no-op
+        return [];
+    }
 }
 
 function visitCondition(conditionExpression): () => boolean {
     return antlr_parser.parseCondition(conditionExpression + "\n");
+}
+
+function visitUserAction(userActionObj) {
+    let actionText = userActionObj['action text'];
+    let effectTree = visitObject(userActionObj['effect tree']);
+
+    return scripting.addUserActionTree(actionText, effectTree);
 }

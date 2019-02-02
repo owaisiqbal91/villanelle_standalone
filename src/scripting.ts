@@ -315,7 +315,7 @@ var agents: Array<Agent> = new Array<Agent>();
 // var agents = [];
 
 export function addAgent(agentName: string) {
-    // console.log("Adding: "+agentName);
+    //console.log("Adding: " + agentName);
     var agent = new Agent(agentName);
     //console.log(agent);
     agents.push(agent);
@@ -438,10 +438,10 @@ function runUserInteractionTrees() {
 export let displayDescriptionAction = (text: string) =>
     action(
         () => true,
-        () => userInteractionObject.text += "\n" + text,
+        () => userInteractionObject.text += "\n" + getTextWithVariablesReplaced(text),
         0
     );
-export let displayActionEffectText = (text: string) => userInteractionObject.actionEffectsText += "\n" + text;
+export let displayActionEffectText = (text: string) => userInteractionObject.actionEffectsText += "\n" + getTextWithVariablesReplaced(text);
 
 export let addUserActionTree = (text: string, effectTree: Tick) => action(
     () => true,
@@ -489,4 +489,18 @@ export function worldTick() {
         }
     }
     runUserInteractionTrees();
+}
+
+function getTextWithVariablesReplaced(text: string) {
+    let words = text.split(' ');
+    for (var i = 0; i < words.length; i++) {
+        if (words[i].startsWith('$')) {
+            //let str = words[i].substring(1, )
+            let variableValue = getVariable(words[i].substring(1));
+            if (variableValue !== undefined)
+                words[i] = variableValue;
+        }
+    }
+
+    return words.join(' ');
 }
