@@ -493,12 +493,15 @@ export function worldTick() {
 
 function getTextWithVariablesReplaced(text: string) {
     let words = text.split(' ');
+    let re = new RegExp('[A-Za-z0-9]+');
     for (var i = 0; i < words.length; i++) {
         if (words[i].startsWith('$')) {
-            //let str = words[i].substring(1, )
-            let variableValue = getVariable(words[i].substring(1));
+            var arr = re.exec(words[i]);
+            let variableName = arr === null ? "" : arr[0];
+
+            let variableValue = getVariable(variableName);
             if (variableValue !== undefined)
-                words[i] = variableValue;
+                words[i] = words[i].replace('$' + variableName, variableValue);
         }
     }
 

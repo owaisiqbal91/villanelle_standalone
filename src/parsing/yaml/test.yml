@@ -54,7 +54,7 @@ Jacobine:
 User Interaction:
   - condition: DateFound == false
     sequence:
-      - description: "Your strength is $Strength. Prom is approaching! You need to have a date! Bella or Jacobine..."
+      - description: "Prom is approaching! You need to have a date! Bella or Jacobine..."
       - user action:
           action text: "Ask Bella the Vampire to Prom"
           effect tree:
