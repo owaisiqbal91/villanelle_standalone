@@ -15,22 +15,38 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
         this.onChange = this.onChange.bind(this);
     }
 
+    getAnnotations() {
+        return [
+            {
+              row: 3, // must be 0 based
+              column: 4, // must be 0 based
+              text: "error.message", // text to show in tooltip
+              type: "error"
+            }
+          ];
+    }
+
     onChange(newValue) {
         this.props.handler(newValue);
+
+        // const annotations = this.getAnnotations();
+        // const editor = this.refs.aceEditor.editor;
+        // editor.getSession().setAnnotations(annotations);
     }
 
     render() {
 
+        //autocomplete
         var keywords = this.getKeywordsAutocompleteList();
         var villanelleKeywordsCompleter = {
             getCompletions: function(editor, session, pos, prefix, callback) {
                 callback(null, keywords);
             }
         }
-
         langTools.setCompleters([langTools.textCompleter, villanelleKeywordsCompleter]);
 
         return <AceEditor
+            ref="aceEditor"
             mode="yaml"
             theme="mono_industrial"
             fontSize = { 20 }
@@ -39,10 +55,11 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
             onLoad={(editor: any) => {
                 editor.focus();
                 editor.getSession().setUseWrapMode(true);
+                //editor.getSession().setAnnotations(this.getAnnotations);
             }}
             name="villanelle_ace_editor"
             value={this.props.code}
-            editorProps={{ $blockScrolling: true }}
+            editorProps={{ $blockScrolling: Infinity }}
             enableLiveAutocompletion={true}
         />
     }

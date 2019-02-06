@@ -1,4 +1,5 @@
 import * as yaml from 'js-yaml';
+import * as jsonschema from 'jsonschema';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as scripting from '../../scripting';
@@ -6,10 +7,89 @@ import * as antlr_parser from '../../parsing/antlr/antlr_parser';
 
 let reservedKeywords = ['Initialization', 'User Interaction'];
 
+let schema = {
+    description: "Schema for villanelle yaml scripting",
+    type: "object",
+    required: ["Initialization", "User Interaction"],
+    properties: {
+        "Initialization": {
+            type: "array",
+            minItems: 1,
+            items: {
+                type: "string"
+            },
+            uniqueItems: true
+        },
+        "User Interaction": {
+            type: "array",
+            minItems: 1,
+            items: {
+                type: "object"
+            },
+            uniqueItems: true
+        }
+    },
+    additionalProperties: {
+        "$ref": "#/definitions/treeNode"
+    },
+    definitions: {
+        userInteraction: {},
+        treeNode: {
+            anyOf: [
+                { "$ref": "#/definitions/sequenceNode" },
+                { "$ref": "#/definitions/selectorNode" },
+                { "$ref": "#/definitions/actionNode" },
+            ]
+        },
+        sequenceNode: {
+            type: "object",
+            required: ["sequence"],
+            properties: {
+                "sequence": { "$ref": "#/definitions/arrayNode" },
+                "condition": { type: "string" }
+            },
+            additionalProperties: false
+        },
+        selectorNode: {
+            type: "object",
+            required: ["selector"],
+            properties: {
+                "selector": { "$ref": "#/definitions/arrayNode" },
+                "condition": { type: "string" }
+            },
+            additionalProperties: false
+        },
+        actionNode: {
+            type: "object",
+            required: ["effects", "ticks"],
+            properties: {
+                "effects": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    }
+                },
+                "ticks": { type: "number" },
+                "effect text": { type: "string" },
+                "condition": { type: "string" }
+            },
+            additionalProperties: false
+        },
+        arrayNode: {//sequence or selector
+            type: "array",
+            items: {
+                "$ref": "#/definitions/treeNode"
+            }
+        }
+    }
+}
+
 export function parse() {
     try {
-        var doc = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, "./test.yml"), 'utf8'));
-        console.log(doc);
+        var doc = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, "./test_error.yml"), 'utf8'));
+
+        var validator = new jsonschema.Validator();
+        console.log(validator.validate(doc, schema));
 
         for (let key in doc) {
             if (!reservedKeywords.includes(key)) {

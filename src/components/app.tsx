@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { VillanelleEditor } from './villanelle_editor';
 import { VillanelleNavbar } from './villanelle_navbar';
 import { VillanellePlayArea } from './villanelle_playarea';
 import { VillanelleAceEditor } from './villanelle_ace_editor';
