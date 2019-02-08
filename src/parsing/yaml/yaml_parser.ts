@@ -1,13 +1,15 @@
-import * as yaml from 'js-yaml';
-import * as jsonschema from 'jsonschema';
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as path from 'path';
-import * as scripting from '../../scripting';
 import * as antlr_parser from '../../parsing/antlr/antlr_parser';
+import * as scripting from '../../scripting';
+
+var Ajv = require('ajv');
 
 let reservedKeywords = ['Initialization', 'User Interaction'];
 
 let schema = {
+    "$id": "root",
     description: "Schema for villanelle yaml scripting",
     type: "object",
     required: ["Initialization", "User Interaction"],
@@ -18,7 +20,10 @@ let schema = {
             items: {
                 type: "string"
             },
-            uniqueItems: true
+            uniqueItems: true,
+            errorMessage: {
+                type: "Initialization should be a list of expressions (at least one)"
+            }
         },
         "User Interaction": {
             type: "array",
@@ -30,34 +35,60 @@ let schema = {
         }
     },
     additionalProperties: {
-        "$ref": "#/definitions/treeNode"
+        "$ref": "root#/definitions/treeNode"
     },
     definitions: {
         userInteraction: {},
         treeNode: {
-            anyOf: [
-                { "$ref": "#/definitions/sequenceNode" },
-                { "$ref": "#/definitions/selectorNode" },
-                { "$ref": "#/definitions/actionNode" },
-            ]
+            'switch': [
+                {
+                    if: {
+                        patternRequired: ['sequence']
+                    },
+                    then: { "$ref": "#/definitions/sequenceNode" }
+                },
+                {
+                    if: {
+                        patternRequired: ['selector']
+                    },
+                    then:  { "$ref": "#/definitions/selectorNode" }
+                },
+                {
+                    if: {
+                        patternRequired: ['effects']
+                    }, then: { "$ref": "root#/definitions/actionNode" }
+                },
+                { then: false }
+            ],
+            errorMessage: "Must be a sequence, selector or effects keyword"
         },
         sequenceNode: {
             type: "object",
             required: ["sequence"],
             properties: {
-                "sequence": { "$ref": "#/definitions/arrayNode" },
+                "sequence": { "$ref": "root#/definitions/arrayNode" },
                 "condition": { type: "string" }
             },
-            additionalProperties: false
+            additionalProperties: false,
+            errorMessage: {
+                properties: {
+                    condition: "Condition must be an expression string"
+                }
+            }
         },
         selectorNode: {
             type: "object",
             required: ["selector"],
             properties: {
-                "selector": { "$ref": "#/definitions/arrayNode" },
+                "selector": { "$ref": "root#/definitions/arrayNode" },
                 "condition": { type: "string" }
             },
-            additionalProperties: false
+            additionalProperties: false,
+            errorMessage: {
+                properties: {
+                    condition: "condition must be an expression string"
+                }
+            }
         },
         actionNode: {
             type: "object",
@@ -73,23 +104,46 @@ let schema = {
                 "effect text": { type: "string" },
                 "condition": { type: "string" }
             },
-            additionalProperties: false
+            additionalProperties: false,
+            errorMessage: {
+                properties: {
+                    "ticks": 'ticks is required and should be a non-negative number',
+                    "effect text": 'effect text must be a string',
+                    "condition": 'condition must be an expression string'
+                }
+            }
         },
         arrayNode: {//sequence or selector
             type: "array",
             items: {
-                "$ref": "#/definitions/treeNode"
-            }
+                "$ref": "root#/definitions/treeNode"
+            },
+            errorMessage: 'Must be a list'
         }
     }
-}
+};
 
 export function parse() {
     try {
         var doc = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, "./test_error.yml"), 'utf8'));
 
-        var validator = new jsonschema.Validator();
-        console.log(validator.validate(doc, schema));
+        // var validator = new jsonschema.Validator();
+        // let errors = validator.validate(doc, schema).errors;
+        // if (errors.length != 0) {
+        //     console.log(errors[0].context);
+        // }
+        // console.log(validator.validate(doc, schema));
+
+        var ajv = new Ajv({allErrors: true, jsonPointers: true});
+        require('ajv-keywords')(ajv, ['switch', 'patternRequired']);
+        require('ajv-errors')(ajv);
+        var validate = ajv.compile(schema);
+        var valid = validate(doc);
+        console.log(valid);
+        if (!valid) {
+            console.log("Invalid");
+            console.log(validate.errors);
+        }
 
         for (let key in doc) {
             if (!reservedKeywords.includes(key)) {

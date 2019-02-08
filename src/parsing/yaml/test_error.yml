@@ -29,7 +29,7 @@ Bella:
           effect text: "Sorry, I only like intelligent guys.."
           effects:
             - BellaAsked := false
-          ticks: 0
+          ticks: true
 
 # Jacobine:
 #   selector:
