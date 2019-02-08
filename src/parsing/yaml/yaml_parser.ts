@@ -1,6 +1,4 @@
-import * as fs from 'fs';
 import * as yaml from 'js-yaml';
-import * as path from 'path';
 import * as antlr_parser from '../../parsing/antlr/antlr_parser';
 import * as scripting from '../../scripting';
 
@@ -164,16 +162,9 @@ let schema = {
     }
 };
 
-export function parse() {
+export function parse(yamlString: string) {
     try {
-        var doc = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, "./test_error.yml"), 'utf8'));
-
-        // var validator = new jsonschema.Validator();
-        // let errors = validator.validate(doc, schema).errors;
-        // if (errors.length != 0) {
-        //     console.log(errors[0].context);
-        // }
-        // console.log(validator.validate(doc, schema));
+        var doc = yaml.safeLoad(yamlString);
 
         var ajv = new Ajv({allErrors: true, jsonPointers: true});
         require('ajv-keywords')(ajv, ['switch', 'patternRequired']);

@@ -507,3 +507,22 @@ function getTextWithVariablesReplaced(text: string) {
 
     return words.join(' ');
 }
+
+export function reset() {
+    blackboard = {};
+    globalIdCounter = 0;
+    agents = new Array<Agent>();
+    locationGraph = {};
+    items = new Array<Item>();
+    variables = {};
+    agentVariables = {};
+    itemVariables = {};
+    agentTrees = {};
+    userInteractionObject = {
+        text: "",
+        userActionsText: [],
+        actionEffectsText: ""
+    }
+    userInteractionTrees = [];
+    userActions = {};
+}
