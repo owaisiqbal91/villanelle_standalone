@@ -29,7 +29,7 @@ Bella:
           effect text: "Sorry, I only like intelligent guys.."
           effects:
             - BellaAsked := false
-          ticks: true
+          ticks: 0
 
 # Jacobine:
 #   selector:
@@ -107,7 +107,8 @@ User Interaction:
                   - Fangs := true
                   - SharpenTeethAction := false
                 ticks: 0
-          - effects: #No-op
+          - effects: 
+              - '' #No-op
             ticks: 0
       - selector:
           - condition: TransplantHairAction == true
@@ -119,5 +120,6 @@ User Interaction:
                   - Fur := true
                   - TransplantHairAction := false
                 ticks: 0
-          - effects: #No op
+          - effects: 
+              - '' #No-op
             ticks: 0

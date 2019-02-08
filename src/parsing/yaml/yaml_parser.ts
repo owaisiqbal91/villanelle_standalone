@@ -29,7 +29,7 @@ let schema = {
             type: "array",
             minItems: 1,
             items: {
-                type: "object"
+                "$ref": "root#/definitions/treeNode"
             },
             uniqueItems: true
         }
@@ -39,6 +39,36 @@ let schema = {
     },
     definitions: {
         userInteraction: {},
+        descriptionNode: {
+            type: "object",
+            properties: {"description" : {type: "string"}},
+            additionalProperties: false,
+            errorMessage: "description must be a string"
+        },
+        actionTextNode: {
+            type: "string",
+            errorMessage: "action text must be a string"
+        },
+        userActionObject: {
+            type: "object",
+            properties: {
+                "user action": { "$ref": "root#/definitions/userActionNode" },
+                "condition": { type: "string" }
+            },
+            additionalProperties: false
+        },
+        userActionNode: {
+            type: "object",
+            required: ["action text", "effect tree"],
+            properties: {
+                "action text": { "$ref": "root#/definitions/actionTextNode" },
+                "effect tree": { "$ref": "root#/definitions/treeNode" },
+            },
+            additionalProperties: false,
+            errorMessage: {
+                required: "'user action' must have 'action text' and 'effect tree' properties"
+            }
+        },
         treeNode: {
             'switch': [
                 {
@@ -57,6 +87,16 @@ let schema = {
                     if: {
                         patternRequired: ['effects']
                     }, then: { "$ref": "root#/definitions/actionNode" }
+                },
+                {
+                    if: {
+                        patternRequired: ['description']
+                    }, then: { "$ref": "root#/definitions/descriptionNode" }
+                },
+                {
+                    if: {
+                        patternRequired: ['user action']
+                    }, then: { "$ref": "root#/definitions/userActionObject" }
                 },
                 { then: false }
             ],
@@ -100,7 +140,7 @@ let schema = {
                         type: "string"
                     }
                 },
-                "ticks": { type: "number" },
+                "ticks": { type: "number", minimum: 0 },
                 "effect text": { type: "string" },
                 "condition": { type: "string" }
             },
@@ -109,7 +149,8 @@ let schema = {
                 properties: {
                     "ticks": 'ticks is required and should be a non-negative number',
                     "effect text": 'effect text must be a string',
-                    "condition": 'condition must be an expression string'
+                    "condition": 'condition must be an expression string',
+                    "effects": 'effects should be a list of expressions'
                 }
             }
         },
@@ -236,7 +277,7 @@ function visitArray(arr: []): any[] {
 function visitEffects(arr: []) {
     if (arr !== null) {
         let statements = arr.join('\n');
-        return antlr_parser.parseEffects(statements + "\n");
+        return statements === '' ? [] : antlr_parser.parseEffects(statements + "\n");
     } else {//no effects, no-op
         return [];
     }
