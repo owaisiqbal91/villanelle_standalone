@@ -14,17 +14,7 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
-    }
-
-    getAnnotations() {
-        return [
-            {
-              row: 3, // must be 0 based
-              column: 4, // must be 0 based
-              text: "error.message", // text to show in tooltip
-              type: "error"
-            }
-          ];
+        initializeGame(props.code);
     }
 
     onChange(newValue) {
