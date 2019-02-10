@@ -18,7 +18,7 @@ const createWindow = async () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 700,
     frame: false,
     icon: path.join(__dirname, '../assets/icons/win/logo.ico') //for windows
   });

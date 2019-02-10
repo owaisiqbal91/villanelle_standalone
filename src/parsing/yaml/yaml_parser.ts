@@ -39,7 +39,7 @@ let schema = {
         userInteraction: {},
         descriptionNode: {
             type: "object",
-            properties: {"description" : {type: "string"}},
+            properties: { "description": { type: "string" } },
             additionalProperties: false,
             errorMessage: "description must be a string"
         },
@@ -79,7 +79,7 @@ let schema = {
                     if: {
                         patternRequired: ['selector']
                     },
-                    then:  { "$ref": "#/definitions/selectorNode" }
+                    then: { "$ref": "#/definitions/selectorNode" }
                 },
                 {
                     if: {
@@ -165,44 +165,43 @@ let schema = {
 export function parse(yamlString: string) {
     try {
         var doc = yaml.safeLoad(yamlString);
-
-        var ajv = new Ajv({allErrors: true, jsonPointers: true});
-        require('ajv-keywords')(ajv, ['switch', 'patternRequired']);
-        require('ajv-errors')(ajv);
-        var validate = ajv.compile(schema);
-        var valid = validate(doc);
-        console.log(valid);
-        if (!valid) {
-            console.log("Invalid");
-            console.log(validate.errors);
-        }
-
-        for (let key in doc) {
-            if (!reservedKeywords.includes(key)) {
-                let agent = scripting.addAgent(key);
-                var tree = visitObject(doc[key]);
-                scripting.attachTreeToAgent(agent, tree);
-            }
-        }
-
-        if (doc['Initialization'] !== undefined) {
-            let initializationLambda = () => visitEffects(doc['Initialization']).forEach(lambda => lambda());
-            initializationLambda();
-        }
-
-        if (doc['User Interaction'] !== undefined) {
-            var userInteractionArr = doc['User Interaction'];
-            userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj)));
-        }
-
-        scripting.initialize();
-        scripting.worldTick();
     } catch (e) {
-        console.log(e);
+        return [{ dataPath: "/", message: "Problem parsing YAML input" }];
     }
+
+    var ajv = new Ajv({ allErrors: true, jsonPointers: true });
+    require('ajv-keywords')(ajv, ['switch', 'patternRequired']);
+    require('ajv-errors')(ajv);
+    var validate = ajv.compile(schema);
+    var valid = validate(doc);
+    let errors = []
+    if (!valid) {
+        errors = validate.errors;
+    }
+
+    for (let key in doc) {
+        if (!reservedKeywords.includes(key)) {
+            let agent = scripting.addAgent(key);
+            var tree = visitObject(doc[key], errors);
+            scripting.attachTreeToAgent(agent, tree);
+        }
+    }
+
+    if (doc['Initialization'] !== undefined) {
+        let initializationLambda = () => visitEffects(doc['Initialization'], errors).forEach(lambda => lambda());
+        if (errors.length == 0)
+            initializationLambda();
+    }
+
+    if (doc['User Interaction'] !== undefined) {
+        var userInteractionArr = doc['User Interaction'];
+        userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors)));
+    }
+
+    return errors;
 }
 
-function visitObject(obj: {}) {
+function visitObject(obj: {}, errors: any[]) {
 
     let condition = obj['condition'] !== undefined;
     let sequence = obj['sequence'] !== undefined;
@@ -213,7 +212,7 @@ function visitObject(obj: {}) {
     var conditionLambda: () => boolean = () => true;
     if (condition) {
         //get condition here
-        conditionLambda = visitCondition(obj['condition']);
+        conditionLambda = visitCondition(obj['condition'], errors);
     }
 
     //user interaction
@@ -224,7 +223,7 @@ function visitObject(obj: {}) {
     }
     let userAction = obj['user action'] !== undefined;
     if (userAction) {
-        let userAction = visitUserAction(obj['user action']);
+        let userAction = visitUserAction(obj['user action'], errors);
         return condition ? scripting.guard(conditionLambda, userAction) : userAction;
     }
 
@@ -233,14 +232,14 @@ function visitObject(obj: {}) {
         //TODO add error check to see if only one of sequence, selector, effects is true
         throw new Error('Cannot have both sequence and selector as keys.')
     } else if (sequence) {
-        sequenceOrSelectorTick = scripting.sequence(visitArray(obj['sequence']));
+        sequenceOrSelectorTick = scripting.sequence(visitArray(obj['sequence'], errors));
     } else if (selector) {
-        sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector']));
+        sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector'], errors));
     }
 
     var effectsLambda;
     if (effects) {
-        var lambdas = visitEffects(obj['effects']);
+        var lambdas = visitEffects(obj['effects'], errors);
         if (effectsText) {
             lambdas.push(() => scripting.displayActionEffectText(obj['effect text']));
         }
@@ -261,26 +260,40 @@ function visitObject(obj: {}) {
     }
 }
 
-function visitArray(arr: []): any[] {
-    return arr.map(obj => visitObject(obj));
+function visitArray(arr: [], errors: any[]): any[] {
+    return arr.map(obj => visitObject(obj, errors));
 }
 
-function visitEffects(arr: []) {
+function visitEffects(arr: [], errors: any[]) {
     if (arr !== null) {
         let statements = arr.join('\n');
-        return statements === '' ? [] : antlr_parser.parseEffects(statements + "\n");
+        if (statements === '') {
+            return [];
+        }
+        let parseResult = antlr_parser.parseEffects(statements + "\n");
+        if (parseResult.errors !== undefined) {
+            parseResult.errors.forEach(error => errors.push(error));
+            return [];
+        } else {
+            return parseResult.lambdas;
+        }
     } else {//no effects, no-op
         return [];
     }
 }
 
-function visitCondition(conditionExpression): () => boolean {
-    return antlr_parser.parseCondition(conditionExpression + "\n");
+function visitCondition(conditionExpression, errors): () => boolean {
+    let parseResult = antlr_parser.parseCondition(conditionExpression + "\n");
+    if (parseResult.errors !== undefined) {
+        parseResult.errors.forEach(error => errors.push(error));
+        return () => true;
+    }
+    return parseResult.lambda;
 }
 
-function visitUserAction(userActionObj) {
+function visitUserAction(userActionObj, errors: any[]) {
     let actionText = userActionObj['action text'];
-    let effectTree = visitObject(userActionObj['effect tree']);
+    let effectTree = visitObject(userActionObj['effect tree'], errors);
 
     return scripting.addUserActionTree(actionText, effectTree);
 }

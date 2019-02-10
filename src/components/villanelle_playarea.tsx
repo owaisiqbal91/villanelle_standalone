@@ -1,58 +1,55 @@
-import { Button, ButtonGroup, Callout, Card, ControlGroup, Divider, Intent } from '@blueprintjs/core';
+import { Button, ButtonGroup, Callout, Card, ControlGroup, Divider, NonIdealState } from '@blueprintjs/core';
 import * as React from 'react';
-import { getUIO } from '../villanelle_game';
-import {executeUserAction, worldTick} from '../scripting';
+import { executeUserAction, worldTick } from '../scripting';
 
-export class VillanellePlayArea extends React.Component<{}, { uio: any }> {
+export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, uio: any }, {}> {
 
     constructor(props) {
         super(props);
-
-        let uio = getUIO();
-        this.state = {
-            uio: uio
-        };
 
         this.actionTaken = this.actionTaken.bind(this);
     }
 
     public actionTaken(index: number) {
-        var selectedAction = this.state.uio.userActionsText[index];
+        var selectedAction = this.props.uio.userActionsText[index];
         if (selectedAction !== undefined) {
             executeUserAction(selectedAction);
-            worldTick();
-            let uio = getUIO();
-            this.setState({uio: uio});
+            let uio = worldTick();
+            this.setState({ uio: uio });
         }
     }
 
     public render() {
 
-        let actionButtons = [];
-        for (let index = 0; index < this.state.uio.userActionsText.length; index++) {
-            actionButtons.push(
-                <Button key={index} small={true} onClick={() => this.actionTaken(index)}>
-                    {this.state.uio.userActionsText[index]}
-                </Button>);
+        if (!this.props.hasErrors) {
+            let actionButtons = [];
+            for (let index = 0; index < this.props.uio.userActionsText.length; index++) {
+                actionButtons.push(
+                    <Button key={index} small={true} onClick={() => this.actionTaken(index)}>
+                        {this.props.uio.userActionsText[index]}
+                    </Button>);
+            }
+
+            var textToDisplay = this.props.uio.actionEffectsText.length != 0 ? this.props.uio.actionEffectsText : this.props.uio.text;
+
+            return (
+                <ControlGroup vertical={true} fill={true}>
+                    <Card elevation={4}>
+                        <Callout title='Monster Prom'>
+                            {textToDisplay}
+                        </Callout>
+                    </Card>
+                    <Divider />
+                    <Card elevation={4}>
+                        <ButtonGroup vertical={true} fill={true}>
+                            {actionButtons}
+                        </ButtonGroup>
+
+                    </Card>
+                </ControlGroup >
+            );
         }
-
-        var textToDisplay = this.state.uio.actionEffectsText.length != 0 ? this.state.uio.actionEffectsText : this.state.uio.text;
-
-        return (
-            <ControlGroup vertical={true} fill={true}>
-                <Card elevation={4}>
-                    <Callout title='Monster Prom'>
-                        {textToDisplay}
-                    </Callout>
-                </Card>
-                <Divider />
-                <Card elevation={4}>
-                    <ButtonGroup vertical={true} fill={true}>
-                        {actionButtons}
-                    </ButtonGroup>
-
-                </Card>
-            </ControlGroup >
-        );
+        return <NonIdealState icon="error" title="Compilation failed!"
+        description="You have one or more error(s) in your script."/>
     }
 }

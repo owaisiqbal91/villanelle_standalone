@@ -1,6 +1,5 @@
 import * as React from 'react';
 import AceEditor from 'react-ace';
-import { initializeGame } from '../villanelle_game';
 
 require("brace/mode/yaml");
 require("brace/theme/mono_industrial");
@@ -14,16 +13,10 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
-        initializeGame(props.code);
     }
 
     onChange(newValue) {
         this.props.handler(newValue);
-
-        initializeGame(newValue);
-        // const annotations = this.getAnnotations();
-        // const editor = this.refs.aceEditor.editor;
-        // editor.getSession().setAnnotations(annotations);
     }
 
     render() {
@@ -43,6 +36,7 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
             theme="mono_industrial"
             fontSize = { 20 }
             width = { "100%" }
+            height = { "570px"}
             onChange={this.onChange}
             onLoad={(editor: any) => {
                 editor.focus();

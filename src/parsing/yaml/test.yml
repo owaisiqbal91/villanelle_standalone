@@ -107,7 +107,8 @@ User Interaction:
                   - Fangs := true
                   - SharpenTeethAction := false
                 ticks: 0
-          - effects: #No-op
+          - effects:
+              - ''
             ticks: 0
       - selector:
           - condition: TransplantHairAction == true
@@ -119,5 +120,6 @@ User Interaction:
                   - Fur := true
                   - TransplantHairAction := false
                 ticks: 0
-          - effects: #No op
+          - effects:
+              - ''
             ticks: 0

@@ -479,7 +479,7 @@ export function getUserInteractionObject() {
     return userInteractionObject;
 }
 
-export function worldTick() {
+export function worldTick(): {} {
     //all agent ticks
     for (var i = 0; i < agents.length; i++) {
         var tree = agentTrees[agents[i].name];
@@ -489,6 +489,8 @@ export function worldTick() {
         }
     }
     runUserInteractionTrees();
+
+    return userInteractionObject;
 }
 
 function getTextWithVariablesReplaced(text: string) {
