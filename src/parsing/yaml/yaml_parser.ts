@@ -98,7 +98,7 @@ let schema = {
                 },
                 { then: false }
             ],
-            errorMessage: "Must be a sequence, selector or effects keyword"
+            errorMessage: "Must have a sequence, selector or effects keyword"
         },
         sequenceNode: {
             type: "object",
@@ -166,7 +166,7 @@ export function parse(yamlString: string) {
     try {
         var doc = yaml.safeLoad(yamlString);
     } catch (e) {
-        return [{ dataPath: "/", message: "Problem parsing YAML input" }];
+        return {doc: doc, errors: [{ dataPath: "/", message: "Problem parsing YAML input" }]};
     }
 
     var ajv = new Ajv({ allErrors: true, jsonPointers: true });
@@ -187,6 +187,7 @@ export function parse(yamlString: string) {
         }
     }
 
+    console.log(doc);
     if (doc['Initialization'] !== undefined) {
         let initializationLambda = () => visitEffects(doc['Initialization'], errors).forEach(lambda => lambda());
         if (errors.length == 0)
@@ -198,7 +199,7 @@ export function parse(yamlString: string) {
         userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors)));
     }
 
-    return errors;
+    return {doc: doc, errors: errors};
 }
 
 function visitObject(obj: {}, errors: any[]) {
