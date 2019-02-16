@@ -1,4 +1,4 @@
-import { Drawer, Code, Icon, ITreeNode, Tree, Overlay, Classes, Elevation, Card, Tooltip } from '@blueprintjs/core';
+import { Drawer, Code, Icon, ITreeNode, Tree, Overlay, Classes, Elevation, Card, Tooltip, H5, Tag, Intent } from '@blueprintjs/core';
 import * as React from 'react';
 
 export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: any[] }, { nodes: ITreeNode[] }> {
@@ -63,7 +63,6 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             treeNodes.push(userInteractionNode);
         }
 
-        console.log(treeNodes);
         this.count = 0;
         return treeNodes;
     }
@@ -162,7 +161,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     label: <b>{'"' + obj['user action']['action text'] + '"'}</b>,
                 })
             }
-            if (obj['user action']['effect tree'] !== undefined){
+            if (obj['user action']['effect tree'] !== undefined) {
                 this.count++;
                 var effectTreeNode = {
                     id: this.count,
@@ -184,7 +183,21 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
     }
 
     getArrayNode(arr, errors) {
-        return arr.map(obj => this.getObjectNode(obj, errors));
+        return arr.map(obj => {
+            if (obj !== null)
+                return this.getObjectNode(obj, errors)
+            else {
+                this.count++;
+                return {
+                    id: this.count,
+                    hasCaret: false,
+                    icon: "error",
+                    label: "Error!",
+                    childNodes: [],
+                    secondaryLabel: (<Tag intent={Intent.DANGER} large={true} interactive={false} active={false} minimal={true}>Error!</Tag>)
+                }
+            }
+        });
     }
 
     getEffectsNodes(effects: string[], errors) {
@@ -211,15 +224,16 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
 
     render() {
         //  return <Drawer portalClassName={Classes.OVERLAY_SCROLL_CONTAINER} size={Drawer.SIZE_LARGE} icon="eye-open" title="Visualized Script" isOpen={true}>
-        return <Overlay className={Classes.OVERLAY_SCROLL_CONTAINER}
-            isOpen={true} hasBackdrop={true} usePortal={true}>
-            <Card elevation={Elevation.FOUR}>
-                <Tree contents={this.state.nodes}
-                    onNodeCollapse={this.handleNodeCollapse}
-                    onNodeExpand={this.handleNodeExpand}>
-                </Tree>
-            </Card>
-        </Overlay>
+        // return <Overlay className={Classes.OVERLAY_SCROLL_CONTAINER}
+        // isOpen={true} hasBackdrop={true} usePortal={true}>
+        return <Card elevation={Elevation.ZERO} interactive={true}>
+            <H5>Tree Visualization</H5>
+            <Tree contents={this.state.nodes}
+                onNodeCollapse={this.handleNodeCollapse}
+                onNodeExpand={this.handleNodeExpand}>
+            </Tree>
+        </Card>
+        {/* </Overlay> */ }
         // </Drawer>;
     }
     /*
@@ -228,16 +242,6 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             hasCaret: true,
             icon: "code",
             label: (<Tag intent={Intent.SUCCESS} large={true} interactive={false} active={false} minimal={true}>Initialization</Tag>)
-        }, {
-            id: 1,
-            hasCaret: true,
-            icon: "person",
-            label: "Bella"
-        }, {
-            id: 2,
-            hasCaret: true,
-            icon: "social-media",
-            label: "User Interaction"
-        }];
+        },];
     */
 }

@@ -3,6 +3,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { enableLiveReload } from 'electron-compile';
 import * as path from 'path';
 import * as url from 'url';
+import * as constants from './constants';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -17,11 +18,13 @@ if (isDevMode) {
 const createWindow = async () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 700,
+    width: constants.windowWidth,
+    height: constants.windowHeight,
     frame: false,
-    icon: path.join(__dirname, '../assets/icons/win/logo.ico') //for windows
+    icon: path.join(__dirname, '../assets/icons/win/logo.ico'), //for windows
   });
+
+  // mainWindow.maximize();
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({

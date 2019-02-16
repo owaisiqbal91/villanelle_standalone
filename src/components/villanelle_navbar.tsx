@@ -2,12 +2,12 @@ import { Alignment, Button, Classes, Navbar, NavbarDivider, NavbarGroup, NavbarH
 import { ipcRenderer } from 'electron';
 import * as React from 'react';
 
-export class VillanelleNavbar extends React.PureComponent<{handler: (string) => void, currentTab: string}> {
+export class VillanelleNavbar extends React.PureComponent<{handler: (string) => void, currentTab: string, fixToTop: boolean}> {
 
     public render() {
 
         return (
-            <Navbar>
+            <Navbar /* fixedToTop={this.props.fixToTop} */>
                 <NavbarGroup align={Alignment.LEFT}>
                     <NavbarHeading>Villanelle</NavbarHeading>
                     <NavbarDivider />

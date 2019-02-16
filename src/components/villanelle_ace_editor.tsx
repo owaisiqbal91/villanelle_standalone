@@ -36,7 +36,7 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
             theme="mono_industrial"
             fontSize = { 20 }
             width = { "100%" }
-            height = { "570px"}
+            height = { "550px"}
             onChange={this.onChange}
             onLoad={(editor: any) => {
                 editor.focus();

@@ -15,7 +15,6 @@ export function parseEffects(str: string) {
         let lambdas = visitor.visitProg(tree);
         return { lambdas: lambdas };
     }
-    // console.log("Error length2: " + errorListener.errors.length);
     return { errors: errorListener.errors };
 }
 

@@ -1,4 +1,4 @@
-import { Callout, Intent } from '@blueprintjs/core';
+import { Callout, Intent, Navbar, Divider, H5, Elevation, Card, H3 } from '@blueprintjs/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
@@ -8,6 +8,10 @@ import { VillanelleAceEditor } from './villanelle_ace_editor';
 import { VillanelleNavbar } from './villanelle_navbar';
 import { VillanellePlayArea } from './villanelle_playarea';
 import { VillanelleTreeVisualizer } from './villanelle_tree_visualizer';
+import { Mosaic, MosaicWindow } from 'react-mosaic-component';
+import { number } from 'prop-types';
+import { Rnd } from "react-rnd";
+import { windowWidth, windowHeight } from '../constants';
 
 export class App extends React.Component<{}, { currentTab: string, code: string, errors: any[], doc: {} }> {
   constructor(props) {
@@ -43,7 +47,7 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
     if (errors.length == 0) {
       scripting.initialize();
     }
-    return {doc: doc, errors: errors};
+    return { doc: doc, errors: errors };
   }
 
   getCallout() {
@@ -71,11 +75,41 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
     if (this.state.currentTab === 'Script') {
       let compilationResult = this.getCallout();
 
-      mainPage = <div>
+      /* mainPage = <div>
         <VillanelleAceEditor handler={this.setCode} code={this.state.code} />
         {compilationResult}
         <VillanelleTreeVisualizer doc={this.state.doc} errors={this.state.errors}/>
-      </div>;
+      </div>; */
+      var layout = [
+        { i: 'a', x: 0, y: 0, w: 1, h: 2, static: true },
+        { i: 'b', x: 1, y: 0, w: 3, h: 2, minW: 2, maxW: 4 },
+        { i: 'c', x: 4, y: 0, w: 1, h: 2 }
+      ];
+      mainPage = <div>
+        <Rnd
+          default={{
+            x: 0,
+            y: 0,
+            width: windowWidth / 2,
+            height: windowHeight,
+          }}
+          disableDragging={true}
+        >
+        <VillanelleAceEditor handler={this.setCode} code={this.state.code} />
+        {compilationResult}
+        </Rnd>
+        <Rnd
+          default={{
+            x: windowWidth / 2,
+            y: 0,
+            width: windowWidth / 2,
+            height: 500,
+          }}
+          disableDragging={true}
+        >
+          <VillanelleTreeVisualizer doc={this.state.doc} errors={this.state.errors} />
+        </Rnd>
+      </div>
     } else if (this.state.currentTab === 'Play') {
       let uio = scripting.getUserInteractionObject();
       mainPage = <VillanellePlayArea hasErrors={this.state.errors.length != 0} uio={uio} />;
@@ -83,7 +117,7 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
 
     return (
       <div>
-        <VillanelleNavbar handler={this.setCurrentTab} currentTab={this.state.currentTab} />
+        <VillanelleNavbar handler={this.setCurrentTab} currentTab={this.state.currentTab} fixToTop={this.state.currentTab === 'Script'}/>
         {mainPage}
       </div>
     );
