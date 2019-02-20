@@ -15,6 +15,7 @@ export function parseEffects(str: string) {
         let lambdas = visitor.visitProg(tree);
         return { lambdas: lambdas };
     }
+    console.log(errorListener.errors);
     return { errors: errorListener.errors };
 }
 
@@ -32,11 +33,13 @@ export function parseCondition(str: string): { lambda?: () => boolean, errors?: 
 
 function getParserAndErrorListener(str: string) {
     let is = new antlr4.InputStream(str);
-    let lexer = new VillanelleGrammarLexer(is);
+    let lexer: antlr4.Lexer = new VillanelleGrammarLexer(is);
     let tokens = new antlr4.CommonTokenStream(lexer);
     let parser: antlr4.Parser = new VillanelleGrammarParser(tokens);
     let errorListener = new VillanelleErrorListener();
 
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(errorListener);
     parser.removeErrorListeners(); // Remove default ConsoleErrorListener
     parser.addErrorListener(errorListener); // Add custom error listener
 

@@ -166,7 +166,7 @@ export function parse(yamlString: string) {
     try {
         var doc = yaml.safeLoad(yamlString);
     } catch (e) {
-        return { doc: doc, errors: [{ dataPath: "/", message: "Problem parsing YAML input" }] };
+        return { doc: doc, errors: [{ dataPath: "/", message: "Incorrect YAML input" }] };
     }
 
     var ajv = new Ajv({ allErrors: true, jsonPointers: true });
@@ -182,26 +182,26 @@ export function parse(yamlString: string) {
     for (let key in doc) {
         if (!reservedKeywords.includes(key)) {
             let agent = scripting.addAgent(key);
-            var tree = visitObject(doc[key], errors);
+            var tree = visitObject(doc[key], errors, "/" + key);
             scripting.attachTreeToAgent(agent, tree);
         }
     }
 
     if (doc['Initialization'] !== undefined) {
-        let initializationLambdas = visitEffects(doc['Initialization'], errors);
+        let initializationLambdas = visitEffects(doc['Initialization'], errors, '/Initialization');
         if (errors.length == 0)
             initializationLambdas.forEach(lambda => lambda());
     }
 
     if (doc['User Interaction'] !== undefined) {
         var userInteractionArr = doc['User Interaction'];
-        userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors)));
+        userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction')));
     }
 
     return { doc: doc, errors: errors };
 }
 
-function visitObject(obj: {}, errors: any[]) {
+function visitObject(obj: {}, errors: any[], dataPath: string) {
 
     let condition = obj['condition'] !== undefined;
     let sequence = obj['sequence'] !== undefined;
@@ -212,7 +212,7 @@ function visitObject(obj: {}, errors: any[]) {
     var conditionLambda: () => boolean = () => true;
     if (condition) {
         //get condition here
-        conditionLambda = visitCondition(obj['condition'], errors);
+        conditionLambda = visitCondition(obj['condition'], errors, dataPath + '/condition');
     }
 
     //user interaction
@@ -223,7 +223,7 @@ function visitObject(obj: {}, errors: any[]) {
     }
     let userAction = obj['user action'] !== undefined;
     if (userAction) {
-        let userAction = visitUserAction(obj['user action'], errors);
+        let userAction = visitUserAction(obj['user action'], errors, dataPath + '/user action');
         return condition ? scripting.guard(conditionLambda, userAction) : userAction;
     }
 
@@ -232,14 +232,14 @@ function visitObject(obj: {}, errors: any[]) {
         //TODO add error check to see if only one of sequence, selector, effects is true
         throw new Error('Cannot have both sequence and selector as keys.')
     } else if (sequence) {
-        sequenceOrSelectorTick = scripting.sequence(visitArray(obj['sequence'], errors));
+        sequenceOrSelectorTick = scripting.sequence(visitArray(obj['sequence'], errors, dataPath + '/sequence'));
     } else if (selector) {
-        sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector'], errors));
+        sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector'], errors, dataPath + '/selector'));
     }
 
     var effectsLambda;
     if (effects) {
-        var lambdas = visitEffects(obj['effects'], errors);
+        var lambdas = visitEffects(obj['effects'], errors, dataPath + '/effects');
         if (effectsText) {
             lambdas.push(() => scripting.displayActionEffectText(obj['effect text']));
         }
@@ -260,14 +260,14 @@ function visitObject(obj: {}, errors: any[]) {
     }
 }
 
-function visitArray(arr: [], errors: any[]): any[] {
-    return arr.map(obj => {
+function visitArray(arr: [], errors: any[], dataPath: string): any[] {
+    return arr.map((obj, index) => {
         if (obj !== null)
-            return visitObject(obj, errors)
+            return visitObject(obj, errors, dataPath + '/' + index)
     });
 }
 
-function visitEffects(arr: [], errors: any[]) {
+function visitEffects(arr: [], errors: any[], dataPath: string) {
     if (arr !== null) {
         let statements = arr.join('\n');
         if (statements === '') {
@@ -275,7 +275,12 @@ function visitEffects(arr: [], errors: any[]) {
         }
         let parseResult = antlr_parser.parseEffects(statements + "\n");
         if (parseResult.errors !== undefined) {
-            parseResult.errors.forEach(error => errors.push(error));
+            parseResult.errors.forEach(error => {
+                error.dataPath = dataPath + '/' + (error.dataPath - 1);
+                //Overriding current antlr message as it is not clear enough
+                error.message = "Error parsing expression";
+                errors.push(error);
+            });
             return [];
         } else {
             return parseResult.lambdas;
@@ -285,18 +290,22 @@ function visitEffects(arr: [], errors: any[]) {
     }
 }
 
-function visitCondition(conditionExpression, errors): () => boolean {
+function visitCondition(conditionExpression, errors, dataPath: string): () => boolean {
     let parseResult = antlr_parser.parseCondition(conditionExpression + "\n");
     if (parseResult.errors !== undefined) {
-        parseResult.errors.forEach(error => errors.push(error));
+        parseResult.errors.forEach(error => {
+            error.dataPath = dataPath;
+            error.message = "Correct condition expression required"
+            errors.push(error)
+        });
         return () => true;
     }
     return parseResult.lambda;
 }
 
-function visitUserAction(userActionObj, errors: any[]) {
+function visitUserAction(userActionObj, errors: any[], dataPath: string) {
     let actionText = userActionObj['action text'];
-    let effectTree = visitObject(userActionObj['effect tree'], errors);
+    let effectTree = visitObject(userActionObj['effect tree'], errors, dataPath + '/effect tree');
 
     return scripting.addUserActionTree(actionText, effectTree);
 }

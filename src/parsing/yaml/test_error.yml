@@ -13,9 +13,9 @@ Initialization:
 
 Bella:
   selector:
-    - condition: Intelligence >= 4 and Fangs == true #precondition for the action below
+    - condition: Intelligence :>= 4 and Fangs == true #precondition for the action below
       effects: 
-        - BellaLikesYou := true
+        - BellaLikesYou ::= true
       ticks: 0 #optional
     - condition: BellaAsked == true #this is a guard for the selector below
       selector:
@@ -54,7 +54,7 @@ Bella:
 User Interaction:
   - condition: DateFound == false
     sequence:
-      - description: "Prom is approaching! You need to have a date! Bella or Jacobine..."
+      - description: -1
       - user action:
           action text: "Ask Bella the Vampire to Prom"
           effect tree:

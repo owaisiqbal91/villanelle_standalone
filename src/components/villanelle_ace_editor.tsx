@@ -8,7 +8,7 @@ require('brace/ext/searchbox');
 var ace = require("brace");
 var langTools = ace.acequire("ace/ext/language_tools");
 
-export class VillanelleAceEditor extends React.Component<{code: string, handler: (string) => void}> {
+export class VillanelleAceEditor extends React.Component<{ code: string, handler: (string) => void, height: number }> {
 
     constructor(props) {
         super(props);
@@ -24,7 +24,7 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
         //autocomplete
         var keywords = this.getKeywordsAutocompleteList();
         var villanelleKeywordsCompleter = {
-            getCompletions: function(editor, session, pos, prefix, callback) {
+            getCompletions: function (editor, session, pos, prefix, callback) {
                 callback(null, keywords);
             }
         }
@@ -34,9 +34,9 @@ export class VillanelleAceEditor extends React.Component<{code: string, handler:
             ref="aceEditor"
             mode="yaml"
             theme="mono_industrial"
-            fontSize = { 20 }
-            width = { "100%" }
-            height = { "550px"}
+            fontSize={20}
+            width={"100%"}
+            height={this.props.height + "px"}
             onChange={this.onChange}
             onLoad={(editor: any) => {
                 editor.focus();

@@ -11,17 +11,18 @@ import { VillanelleTreeVisualizer } from './villanelle_tree_visualizer';
 import { Mosaic, MosaicWindow } from 'react-mosaic-component';
 import { number } from 'prop-types';
 import { Rnd } from "react-rnd";
-import { windowWidth, windowHeight } from '../constants';
 
-export class App extends React.Component<{}, { currentTab: string, code: string, errors: any[], doc: {} }> {
+var electron = require('electron');
+
+export class App extends React.Component<{}, { currentTab: string, code: string, errors: {}, doc: {} }> {
   constructor(props) {
     super(props);
-    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test.yml"), 'utf8');
+    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test_error.yml"), 'utf8');
     var parsedObject = this.initializeGame(yamlString);
     this.state = {
       currentTab: 'Script',
       code: yamlString,
-      errors: parsedObject.errors,
+      errors: this.getErrorsByDataPath(parsedObject.errors),
       doc: parsedObject.doc
     };
 
@@ -35,7 +36,7 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
 
   public setCode(code) {
     var parsedObject = this.initializeGame(code);
-    this.setState({ code: code, errors: parsedObject.errors, doc: parsedObject.doc });
+    this.setState({ code: code, errors: this.getErrorsByDataPath(parsedObject.errors), doc: parsedObject.doc });
   }
 
   initializeGame(yamlString) {
@@ -51,13 +52,15 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
   }
 
   getCallout() {
-    if (this.state.errors.length != 0) {
+    var errorDatapaths = Object.keys(this.state.errors);
+    var errors = this.state.errors;
+    if (errorDatapaths.length != 0) {
       let errorsList = <ul>
-        {this.state.errors.map(function (error: { message: string }, index) {
-          return <li key={index}>{error.message}</li>
+        {errorDatapaths.map(function (errorDatapath, index) {
+          return <li key={index}>{errors[errorDatapath].message}</li>
         })}
       </ul>;
-      let title = "Compilation: " + this.state.errors.length + " error(s)";
+      let title = "Compilation: " + errorDatapaths.length + " error(s)";
       return <Callout title={title} intent={Intent.DANGER}>
         {errorsList}
       </Callout>;
@@ -80,11 +83,9 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
         {compilationResult}
         <VillanelleTreeVisualizer doc={this.state.doc} errors={this.state.errors}/>
       </div>; */
-      var layout = [
-        { i: 'a', x: 0, y: 0, w: 1, h: 2, static: true },
-        { i: 'b', x: 1, y: 0, w: 3, h: 2, minW: 2, maxW: 4 },
-        { i: 'c', x: 4, y: 0, w: 1, h: 2 }
-      ];
+      var screen = electron.screen.getPrimaryDisplay();
+      let windowWidth = screen.size.width;
+      let windowHeight = screen.size.height;
       mainPage = <div>
         <Rnd
           default={{
@@ -95,31 +96,41 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
           }}
           disableDragging={true}
         >
-        <VillanelleAceEditor handler={this.setCode} code={this.state.code} />
-        {compilationResult}
+          <VillanelleAceEditor handler={this.setCode} code={this.state.code} height={windowHeight - 200} />
+          {compilationResult}
         </Rnd>
         <Rnd
           default={{
             x: windowWidth / 2,
             y: 0,
             width: windowWidth / 2,
-            height: 500,
+            height: windowHeight,
           }}
           disableDragging={true}
         >
-          <VillanelleTreeVisualizer doc={this.state.doc} errors={this.state.errors} />
+          <VillanelleTreeVisualizer key={this.state.code} doc={this.state.doc} errors={this.state.errors} />
         </Rnd>
       </div>
     } else if (this.state.currentTab === 'Play') {
       let uio = scripting.getUserInteractionObject();
-      mainPage = <VillanellePlayArea hasErrors={this.state.errors.length != 0} uio={uio} />;
+      mainPage = <VillanellePlayArea hasErrors={Object.keys(this.state.errors).length != 0} uio={uio} />;
     }
 
     return (
       <div>
-        <VillanelleNavbar handler={this.setCurrentTab} currentTab={this.state.currentTab} fixToTop={this.state.currentTab === 'Script'}/>
+        <VillanelleNavbar handler={this.setCurrentTab} currentTab={this.state.currentTab} fixToTop={this.state.currentTab === 'Script'} />
         {mainPage}
       </div>
     );
+  }
+
+  getErrorsByDataPath(errors) {
+    var errorsByDataPath = {};
+    errors.forEach(error => {
+      var path = error.dataPath ? error.dataPath : "/";
+      errorsByDataPath[path] = error;
+    });
+
+    return errorsByDataPath;
   }
 }

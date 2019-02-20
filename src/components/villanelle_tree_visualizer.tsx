@@ -1,11 +1,13 @@
 import { Drawer, Code, Icon, ITreeNode, Tree, Overlay, Classes, Elevation, Card, Tooltip, H5, Tag, Intent } from '@blueprintjs/core';
 import * as React from 'react';
 
-export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: any[] }, { nodes: ITreeNode[] }> {
+export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: {} }, { nodes: ITreeNode[] }> {
 
     constructor(props) {
         super(props);
-        var nodes = this.getNodeTree(props.doc, props.errors);
+        console.log(this.props.doc);
+        console.log(this.props.errors);
+        var nodes = this.getNodeTree(this.props.doc, this.props.errors);
         this.state = {
             nodes: nodes
         }
@@ -15,7 +17,9 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
     getNodeTree(doc, errors): ITreeNode[] {
         let reservedKeywords = ['Initialization', 'User Interaction'];
 
-        //TODO check root level error here
+        if (errors['/']) {
+            return [];
+        }
         var treeNodes = [];
         if (doc['Initialization'] !== undefined) {
             this.count++;
@@ -27,14 +31,14 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 isExpanded: false,
                 childNodes: []
             }
-            var initializationChildNodes = this.getEffectsNodes(doc['Initialization'], errors);
+            var initializationChildNodes = this.getEffectsNodes(doc['Initialization'], errors, "/Initialization");
             initializationNode.childNodes = initializationChildNodes;
             treeNodes.push(initializationNode);
         }
 
         for (let key in doc) {
             if (!reservedKeywords.includes(key)) {
-                var childNode = this.getObjectNode(doc[key], errors);
+                var childNode = this.getObjectNode(doc[key], errors, "/" + key);
                 this.count++;
                 var agentNode = {
                     id: this.count,
@@ -58,7 +62,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 isExpanded: true,
                 childNodes: []
             }
-            var interactionChildNodes = this.getArrayNode(doc['User Interaction'], errors);
+            var interactionChildNodes = this.getArrayNode(doc['User Interaction'], errors, "/User Interaction");
             userInteractionNode.childNodes = interactionChildNodes;
             treeNodes.push(userInteractionNode);
         }
@@ -67,18 +71,24 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
         return treeNodes;
     }
 
-    getObjectNode(obj, errors) {
+    getObjectNode(obj, errors, dataPath) {
         var conditionNode, nodeToBuild;
         if (obj['condition'] !== undefined) {
-            this.count++;
-            conditionNode = {
-                id: this.count,
-                hasCaret: true,
-                icon: "help",
-                isExpanded: true,
-                label: obj['condition'],
-                childNodes: [],
-            };
+
+            if (errors[dataPath + "/condition"]) {
+                conditionNode = this.getErrorTreeNode(errors[dataPath + "/condition"].message, obj['condition']);
+                conditionNode.hasCaret = true;
+            } else {
+                this.count++;
+                conditionNode = {
+                    id: this.count,
+                    hasCaret: true,
+                    icon: "help",
+                    isExpanded: true,
+                    label: obj['condition'],
+                    childNodes: [],
+                };
+            }
         }
 
         if (obj['sequence'] !== undefined) {
@@ -91,7 +101,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 label: "sequence",
                 childNodes: []
             };
-            nodeToBuild.childNodes = this.getArrayNode(obj['sequence'], errors);
+            nodeToBuild.childNodes = this.getArrayNode(obj['sequence'], errors, dataPath + "/sequence");
         } else if (obj['selector'] !== undefined) {
             this.count++;
             nodeToBuild = {
@@ -102,9 +112,9 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 label: "selector",
                 childNodes: []
             };
-            nodeToBuild.childNodes = this.getArrayNode(obj['selector'], errors);
+            nodeToBuild.childNodes = this.getArrayNode(obj['selector'], errors, dataPath + "/selector");
         } else if (obj['effects'] !== undefined) {
-            nodeToBuild = this.getEffectsNodes(obj['effects'], errors);
+            nodeToBuild = this.getEffectsNodes(obj['effects'], errors, dataPath + "/effects");
             if (conditionNode === undefined) {
                 this.count++;
                 conditionNode = {
@@ -118,17 +128,28 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             }
 
             if (obj['effect text'] !== undefined) {
-                this.count++;
-                nodeToBuild.push({
-                    id: this.count,
-                    hasCaret: false,
-                    icon: "comment",
-                    label: <Tooltip content="effect text"><i>{'"' + obj['effect text'] + '"'}</i></Tooltip>
-                });
+                if (errors[dataPath + '/effect text']) {
+                    nodeToBuild.push(this.getErrorTreeNode(errors[dataPath + '/effect text'].message, obj['effect text'] + ''));
+                } else {
+                    this.count++;
+                    nodeToBuild.push({
+                        id: this.count,
+                        hasCaret: false,
+                        icon: "comment",
+                        label: <Tooltip content="effect text"><i>{'"' + obj['effect text'] + '"'}</i></Tooltip>
+                    });
+                }
             }
 
             if (obj['ticks'] !== undefined) {
-                let tickLabel = (<div><Icon icon="time" /> {obj['ticks']}</div>);
+                var tickLabel;
+                if (errors[dataPath + '/ticks']) {
+                    tickLabel = (<Tooltip content={errors[dataPath + '/ticks'].message} intent={Intent.DANGER}>
+                        <Icon icon="error" color="red"></Icon>
+                    </Tooltip>);
+                } else {
+                    tickLabel = (<div><Icon icon="time" /> {obj['ticks']}</div>);
+                }
                 if (conditionNode !== undefined) {
                     conditionNode.secondaryLabel = tickLabel;
                 } else { //attach to first effects statement
@@ -136,13 +157,17 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 }
             }
         } else if (obj['description'] !== undefined) {
-            this.count++;
-            nodeToBuild = {
-                id: this.count,
-                hasCaret: false,
-                icon: "paragraph",
-                label: <Tooltip content="description"><i>{'"' + obj['description'] + '"'}</i></Tooltip>
-            };
+            if (errors[dataPath + '/description']) {
+                nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/description'], obj['description']);
+            } else {
+                this.count++;
+                nodeToBuild = {
+                    id: this.count,
+                    hasCaret: false,
+                    icon: "paragraph",
+                    label: <Tooltip content="description"><i>{'"' + obj['description'] + '"'}</i></Tooltip>
+                };
+            }
         } else if (obj['user action'] !== undefined) {
             this.count++;
             nodeToBuild = {
@@ -170,7 +195,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     label: "effect tree",
                     childNodes: []
                 };
-                let effectTreeChildNodes = this.getObjectNode(obj['user action']['effect tree'], errors);
+                let effectTreeChildNodes = this.getObjectNode(obj['user action']['effect tree'], errors, dataPath + "/user action/effect tree");
                 effectTreeNode.childNodes = Array.isArray(effectTreeChildNodes) ? effectTreeChildNodes : [effectTreeChildNodes];
                 nodeToBuild.childNodes.push(effectTreeNode);
             }
@@ -182,34 +207,54 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
         } else return nodeToBuild;
     }
 
-    getArrayNode(arr, errors) {
-        return arr.map(obj => {
-            if (obj !== null)
-                return this.getObjectNode(obj, errors)
-            else {
+    getArrayNode(arr, errors, dataPath) {
+        return arr.map((obj, index) => {
+            if (obj !== null) {
+                if (errors[dataPath + '/' + index]) {
+                    // let error = errors[dataPath + '/' + index];
+                    // error.dataPath = dataPath + '/' + 
+                    // errors.push(error);
+                }
+                return this.getObjectNode(obj, errors, dataPath + "/" + index)
+            } else {
                 this.count++;
                 return {
                     id: this.count,
                     hasCaret: false,
-                    icon: "error",
-                    label: "Error!",
-                    childNodes: [],
-                    secondaryLabel: (<Tag intent={Intent.DANGER} large={true} interactive={false} active={false} minimal={true}>Error!</Tag>)
+                    label: (<Tooltip content="Null object" intent={Intent.DANGER}><Icon icon="error" color="red"></Icon></Tooltip>),
+                    childNodes: []
                 }
             }
         });
     }
 
-    getEffectsNodes(effects: string[], errors) {
-        return effects.map(effect => {
-            this.count++;
-            return {
-                id: this.count,
-                hasCaret: false,
-                label: <Code>{effect}</Code>,
-                icon: "code"
+    getEffectsNodes(effects: string[], errors, dataPath) {
+        return effects.map((effect, index) => {
+            if (errors[dataPath + '/' + index]) {
+                return this.getErrorTreeNode(errors[dataPath + '/' + index].message, effect + "");
+            } else {
+                this.count++;
+                return {
+                    id: this.count,
+                    hasCaret: false,
+                    label: <Code>{effect}</Code>,
+                    icon: "code"
+                }
             }
         });
+    }
+
+    private getErrorTreeNode(errorMessage: string, text) {
+        this.count++;
+        return {
+            id: this.count,
+            hasCaret: false,
+            icon: <Tooltip content={errorMessage} intent={Intent.DANGER}><Icon icon="error" color="red"></Icon></Tooltip>,
+            label: (<Tooltip content={errorMessage} intent={Intent.DANGER}>
+                <Tag intent={Intent.DANGER} large={true} interactive={false} active={false} minimal={true}>{text}</Tag>
+                {/* {text} */}
+            </Tooltip>),
+        }
     }
 
     private handleNodeCollapse = (nodeData: ITreeNode) => {
@@ -223,19 +268,26 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
     };
 
     render() {
-        //  return <Drawer portalClassName={Classes.OVERLAY_SCROLL_CONTAINER} size={Drawer.SIZE_LARGE} icon="eye-open" title="Visualized Script" isOpen={true}>
-        // return <Overlay className={Classes.OVERLAY_SCROLL_CONTAINER}
-        // isOpen={true} hasBackdrop={true} usePortal={true}>
+        var tree;
+        if (this.props.errors['/']) {
+            tree = <H5>
+                <Tooltip content={this.props.errors['/'].message} intent={Intent.DANGER}>
+                    <Icon icon="error" color="red"></Icon>
+                </Tooltip>
+                Tree Visualization
+            </H5>
+        } else {
+            tree = <div><H5>Tree Visualization</H5>
+                <Tree contents={this.state.nodes}
+                    onNodeCollapse={this.handleNodeCollapse}
+                    onNodeExpand={this.handleNodeExpand}>
+                </Tree></div>
+        }
         return <Card elevation={Elevation.ZERO} interactive={true}>
-            <H5>Tree Visualization</H5>
-            <Tree contents={this.state.nodes}
-                onNodeCollapse={this.handleNodeCollapse}
-                onNodeExpand={this.handleNodeExpand}>
-            </Tree>
+            {tree}
         </Card>
-        {/* </Overlay> */ }
-        // </Drawer>;
     }
+
     /*
     return [{
             id: 0,

@@ -23,7 +23,7 @@ ADD : '+' ;
 SUB : '-' ;
 
 //RULES
-prog: stat+ ;
+prog: stat+;
 
 stat: expr NEWLINE
 | assign

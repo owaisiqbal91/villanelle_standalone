@@ -1,9 +1,8 @@
-import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, screen } from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { enableLiveReload } from 'electron-compile';
 import * as path from 'path';
 import * as url from 'url';
-import * as constants from './constants';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -18,13 +17,15 @@ if (isDevMode) {
 const createWindow = async () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: constants.windowWidth,
-    height: constants.windowHeight,
+    width: 600,
+    height: 700,
     frame: false,
     icon: path.join(__dirname, '../assets/icons/win/logo.ico'), //for windows
   });
 
-  // mainWindow.maximize();
+  mainWindow.maximize();
+
+  console.log(screen.getPrimaryDisplay().size);
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
