@@ -98,7 +98,7 @@ let schema = {
                 },
                 { then: false }
             ],
-            errorMessage: "Must have a sequence, selector or effects keyword"
+            errorMessage: "Must have a sequence, selector, effects, description or user action keyword"
         },
         sequenceNode: {
             type: "object",
@@ -195,7 +195,8 @@ export function parse(yamlString: string) {
 
     if (doc['User Interaction'] !== undefined) {
         var userInteractionArr = doc['User Interaction'];
-        userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction')));
+        if (Array.isArray(userInteractionArr))
+            userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction')));
     }
 
     return { doc: doc, errors: errors };
@@ -203,60 +204,60 @@ export function parse(yamlString: string) {
 
 function visitObject(obj: {}, errors: any[], dataPath: string) {
 
-    let condition = obj['condition'] !== undefined;
-    let sequence = obj['sequence'] !== undefined;
-    let selector = obj['selector'] !== undefined;
-    let effects = obj['effects'] !== undefined;
-    let effectsText = obj['effect text'] !== undefined;
+    if (obj) {
+        let condition = obj['condition'] !== undefined;
+        let sequence = obj['sequence'];
+        let selector = obj['selector'];
+        let effects = obj['effects'] !== undefined;
+        let effectsText = obj['effect text'] !== undefined;
 
-    var conditionLambda: () => boolean = () => true;
-    if (condition) {
-        //get condition here
-        conditionLambda = visitCondition(obj['condition'], errors, dataPath + '/condition');
-    }
-
-    //user interaction
-    let description = obj['description'] !== undefined;
-    if (description) {
-        let descriptionAction = scripting.displayDescriptionAction(obj['description']);
-        return condition ? scripting.guard(conditionLambda, descriptionAction) : descriptionAction;
-    }
-    let userAction = obj['user action'] !== undefined;
-    if (userAction) {
-        let userAction = visitUserAction(obj['user action'], errors, dataPath + '/user action');
-        return condition ? scripting.guard(conditionLambda, userAction) : userAction;
-    }
-
-    var sequenceOrSelectorTick;
-    if (sequence && selector) {
-        //TODO add error check to see if only one of sequence, selector, effects is true
-        throw new Error('Cannot have both sequence and selector as keys.')
-    } else if (sequence) {
-        sequenceOrSelectorTick = scripting.sequence(visitArray(obj['sequence'], errors, dataPath + '/sequence'));
-    } else if (selector) {
-        sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector'], errors, dataPath + '/selector'));
-    }
-
-    var effectsLambda;
-    if (effects) {
-        var lambdas = visitEffects(obj['effects'], errors, dataPath + '/effects');
-        if (effectsText) {
-            lambdas.push(() => scripting.displayActionEffectText(obj['effect text']));
+        var conditionLambda: () => boolean = () => true;
+        if (condition) {
+            //get condition here
+            conditionLambda = visitCondition(obj['condition'], errors, dataPath + '/condition');
         }
-        effectsLambda = () => lambdas.forEach(lambda => lambda());
-    }
 
-    if (condition) {
-        //action
+        //user interaction
+        if (obj['description']) {
+            let descriptionAction = scripting.displayDescriptionAction(obj['description']);
+            return condition ? scripting.guard(conditionLambda, descriptionAction) : descriptionAction;
+        }
+        let userAction = obj['user action'] !== undefined && obj['user action'] !== null;
+        if (userAction) {
+            let userAction = visitUserAction(obj['user action'], errors, dataPath + '/user action');
+            return condition ? scripting.guard(conditionLambda, userAction) : userAction;
+        }
+
+        var sequenceOrSelectorTick;
+        if (sequence && selector) {
+            throw new Error('Cannot have both sequence and selector as keys.')
+        } else if (sequence && Array.isArray(obj['sequence'])) {
+            sequenceOrSelectorTick = scripting.sequence(visitArray(obj['sequence'], errors, dataPath + '/sequence'));
+        } else if (selector && Array.isArray(obj['selector'])) {
+            sequenceOrSelectorTick = scripting.selector(visitArray(obj['selector'], errors, dataPath + '/selector'));
+        }
+
+        var effectsLambda;
         if (effects) {
-            return scripting.action(conditionLambda, effectsLambda, obj['ticks']);
-        } else {//guard
-            return scripting.guard(conditionLambda, sequenceOrSelectorTick);
+            var lambdas = visitEffects(obj['effects'], errors, dataPath + '/effects');
+            if (effectsText) {
+                lambdas.push(() => scripting.displayActionEffectText(obj['effect text']));
+            }
+            effectsLambda = () => lambdas.forEach(lambda => lambda());
         }
-    } else if (effects) { //action without condition
-        return scripting.action(() => true, effectsLambda, obj['ticks']);
-    } else {
-        return sequenceOrSelectorTick;
+
+        if (condition) {
+            //action
+            if (effects) {
+                return scripting.action(conditionLambda, effectsLambda, obj['ticks']);
+            } else {//guard
+                return scripting.guard(conditionLambda, sequenceOrSelectorTick);
+            }
+        } else if (effects) { //action without condition
+            return scripting.action(() => true, effectsLambda, obj['ticks']);
+        } else {
+            return sequenceOrSelectorTick;
+        }
     }
 }
 
