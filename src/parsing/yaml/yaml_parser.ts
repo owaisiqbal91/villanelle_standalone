@@ -179,24 +179,26 @@ export function parse(yamlString: string) {
         errors = validate.errors;
     }
 
-    for (let key in doc) {
-        if (!reservedKeywords.includes(key)) {
-            let agent = scripting.addAgent(key);
-            var tree = visitObject(doc[key], errors, "/" + key);
-            scripting.attachTreeToAgent(agent, tree);
+    if (doc !== undefined) {
+        for (let key in doc) {
+            if (!reservedKeywords.includes(key)) {
+                let agent = scripting.addAgent(key);
+                var tree = visitObject(doc[key], errors, "/" + key);
+                scripting.attachTreeToAgent(agent, tree);
+            }
         }
-    }
 
-    if (doc['Initialization'] !== undefined) {
-        let initializationLambdas = visitEffects(doc['Initialization'], errors, '/Initialization');
-        if (errors.length == 0)
-            initializationLambdas.forEach(lambda => lambda());
-    }
+        if (doc['Initialization'] !== undefined) {
+            let initializationLambdas = visitEffects(doc['Initialization'], errors, '/Initialization');
+            if (errors.length == 0)
+                initializationLambdas.forEach(lambda => lambda());
+        }
 
-    if (doc['User Interaction'] !== undefined) {
-        var userInteractionArr = doc['User Interaction'];
-        if (Array.isArray(userInteractionArr))
-            userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction')));
+        if (doc['User Interaction'] !== undefined) {
+            var userInteractionArr = doc['User Interaction'];
+            if (Array.isArray(userInteractionArr))
+                userInteractionArr.forEach(interactionObj => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction')));
+        }
     }
 
     return { doc: doc, errors: errors };
@@ -218,7 +220,7 @@ function visitObject(obj: {}, errors: any[], dataPath: string) {
         }
 
         //user interaction
-        if (obj['description']) {
+        if (obj['description'] !== undefined) {
             let descriptionAction = scripting.displayDescriptionAction(obj['description']);
             return condition ? scripting.guard(conditionLambda, descriptionAction) : descriptionAction;
         }

@@ -430,6 +430,7 @@ function runUserInteractionTrees() {
     userInteractionObject.text = "";
     userInteractionObject.userActionsText = [];
     userActions = {}; //{"Go to location X" : effect
+    console.log(userInteractionTrees);
     for (var i = 0; i < userInteractionTrees.length; i++) {
         execute(userInteractionTrees[i]);
     }

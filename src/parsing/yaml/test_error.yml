@@ -13,48 +13,48 @@ Initialization:
 
 Bella:
   selector:
-      condition: Intelligence :>= 4 and Fangs == true #precondition for the action below
+    - condition: Intelligence >= 4 and Fangs == true #precondition for the action below
       effects: 
-        - BellaLikesYou ::= true
+        - BellaLikesYou := true
       ticks: 0 #optional
-    # - condition: BellaAsked == true #this is a guard for the selector below
-    #   selector:
-    #     - condition: Fangs == false
-    #       effect text: Ew, you don't even have fangs..
-    #       effects:
-    #         - BellaAsked := false
-    #         - SharpenTeethAction := true
-    #       ticks: 0 #optional
-    #     - condition: Intelligence < 4
-    #       effect text: "Sorry, I only like intelligent guys.."
-    #       effects:
-    #         - BellaAsked := false
-    #       ticks: 0
+    - condition: BellaAsked == true #this is a guard for the selector below
+      selector:
+        - condition: Fangs == false
+          effect text: Ew, you don't even have fangs..
+          effects:
+            - BellaAsked := false
+            - SharpenTeethAction := true
+          ticks: 0 #optional
+        - condition: Intelligence < 4
+          effect text: "Sorry, I only like intelligent guys.."
+          effects:
+            - BellaAsked := false
+          ticks: 0
 
-# Jacobine:
-#   selector:
-#     - condition: Strength >= 4 and Fur == true #precondition for the action below
-#       effects: 
-#         - JacobineLikesYou := true
-#       ticks: 0 #optional
-#     - condition: JacobineAsked == true #this is a guard for the selector below
-#       selector:
-#         - condition: Fur == false
-#           effect text: "I'm more of a furry type of person.."
-#           effects:
-#             - JacobineAsked := false
-#             - TransplantHairAction := true
-#           ticks: 0 #optional
-#         - condition: Strength < 4
-#           effect text: "You are kinda weak.."
-#           effects:
-#             - JacobineAsked := false
-#           ticks: 0
+Jacobine:
+  selector:
+    - condition: Strength >= 4 and Fur == true #precondition for the action below
+      effects: 
+        - JacobineLikesYou := true
+      ticks: 0 #optional
+    - condition: JacobineAsked == true #this is a guard for the selector below
+      selector:
+        - condition: Fur == false
+          effect text: "I'm more of a furry type of person.."
+          effects:
+            - JacobineAsked := false
+            - TransplantHairAction := true
+          ticks: 0 #optional
+        - condition: Strength < 4
+          effect text: "You are kinda weak.."
+          effects:
+            - JacobineAsked := false
+          ticks: 0
 
 User Interaction:
   - condition: DateFound == false
     sequence:
-      - description: -1
+      - description: "Prom is approaching! You need to have a date! Bella or Jacobine..."
       - user action:
           action text: "Ask Bella the Vampire to Prom"
           effect tree:
@@ -106,9 +106,9 @@ User Interaction:
                 effects:
                   - Fangs := true
                   - SharpenTeethAction := false
-                ticks: -1
-          - effects: 
-              - '' #No-op
+                ticks: 0
+          - effects:
+              - ''
             ticks: 0
       - selector:
           - condition: TransplantHairAction == true
@@ -120,6 +120,6 @@ User Interaction:
                   - Fur := true
                   - TransplantHairAction := false
                 ticks: 0
-          - effects: 
-              - '' #No-op
+          - effects:
+              - ''
             ticks: 0

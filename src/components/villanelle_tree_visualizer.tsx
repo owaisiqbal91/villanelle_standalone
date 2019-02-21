@@ -4,11 +4,14 @@ import { node } from 'prop-types';
 
 export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: {} }, { nodes: ITreeNode[] }> {
 
+    errorDatapaths;
     constructor(props) {
         super(props);
         console.log(this.props.doc);
         console.log(this.props.errors);
+        this.errorDatapaths = Object.keys(this.props.errors);
         var nodes = this.getNodeTree(this.props.doc, this.props.errors);
+        console.log(this.errorDatapaths);
         this.state = {
             nodes: nodes
         }
@@ -55,7 +58,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         hasCaret: true,
                         icon: "person",
                         label: key,
-                        isExpanded: true,
+                        isExpanded: false,
                         childNodes: Array.isArray(childNode) ? childNode : [childNode]
                     }
                 }
@@ -74,7 +77,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     hasCaret: true,
                     icon: "social-media",
                     label: "User Interaction",
-                    isExpanded: false,
+                    isExpanded: this.isDatapathOnErrorPath('/User Interaction'),
                     childNodes: []
                 }
                 var interactionChildNodes = this.getArrayNode(doc['User Interaction'], errors, "/User Interaction");
@@ -103,7 +106,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         id: this.count,
                         hasCaret: true,
                         icon: "help",
-                        isExpanded: true,
+                        isExpanded: false,
                         label: obj['condition'],
                         childNodes: [],
                         nodeData: { text: obj['condition'] }
@@ -119,7 +122,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
-                        isExpanded: true,
+                        isExpanded: false,
                         icon: "arrow-right",
                         label: "sequence",
                         childNodes: [],
@@ -135,7 +138,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
-                        isExpanded: true,
+                        isExpanded: false,
                         icon: "flow-branch",
                         label: "selector",
                         childNodes: [],
@@ -151,7 +154,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         id: this.count,
                         hasCaret: true,
                         icon: "help",
-                        isExpanded: true,
+                        isExpanded: false,
                         label: "true",
                         childNodes: [],
                         nodeData: { text: 'true' }
@@ -201,7 +204,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         nodeData: { text: <i>{obj['description']}</i> }
                     };
                 }
-            } else if (obj['user action'] !== undefined) {
+            } else if (obj['user action']) {
                 if (errors[dataPath + '/user action']) {
                     nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/user action'], 'user action');
                 } else {
@@ -320,6 +323,18 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 <Tag intent={Intent.DANGER} large={true} interactive={false} active={false} minimal={true}>{text}</Tag>
             </Tooltip>),
         }
+    }
+
+    private isDatapathOnErrorPath(dataPath: string) {
+        if (this.errorDatapaths) {
+            for (var i = 0; i < this.errorDatapaths.length; i++) {
+                if (this.errorDatapaths[i].startsWith(dataPath)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private handleNodeCollapse = (nodeData: ITreeNode) => {
