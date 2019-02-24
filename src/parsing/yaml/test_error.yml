@@ -2,7 +2,7 @@ Initialization:
   - Strength := 0
   - Intelligence := 0
   - BellaLikesYou := false
-  - BellaAsked := false
+  - BellaAsked ::= false
   - JacobineLikesYou := false
   - JacobineAsked := false
   - Fangs := false
@@ -44,7 +44,7 @@ Jacobine:
           effects:
             - JacobineAsked := false
             - TransplantHairAction := true
-          ticks: 0 #optional
+          ticks: -1 #optional
         - condition: Strength < 4
           effect text: "You are kinda weak.."
           effects:
@@ -52,7 +52,7 @@ Jacobine:
           ticks: 0
 
 User Interaction:
-  - condition: DateFound == false
+  - condition: DateFound :== false
     sequence:
       - description: "Prom is approaching! You need to have a date! Bella or Jacobine..."
       - user action:
@@ -77,7 +77,7 @@ User Interaction:
                 effects:
                   - DateFound := true
                 ticks: 0
-              - condition: JacobineLikesYou == false
+              - condition: JacobineLikesYou === false
                 effects:
                   - JacobineAsked := true
                 ticks: 0

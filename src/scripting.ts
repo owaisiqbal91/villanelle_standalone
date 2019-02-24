@@ -8,6 +8,7 @@ export enum Status {
 }
 
 function terminateAndReturn(id: number, blackboard: any, status: Status) {
+    nodeStatusMap[id] = status;
     delete blackboard[id];
     return status;
 }
@@ -26,6 +27,7 @@ export type GuardTick = (precondition: Precondition, astTick: Tick, negate?: boo
 export type CompositeTick = (astTicks: Tick[]) => Tick;
 
 var blackboard = {};
+var nodeStatusMap = {};
 
 function getActionTick(id: number): ActionTick {
     return (precondition, effect, ticksRequired = 1) => {
@@ -38,13 +40,15 @@ function getActionTick(id: number): ActionTick {
 
                 if (blackboard[id].ticksDone > 0) {
                     blackboard[id].ticksDone--;
+                    nodeStatusMap[id] = Status.RUNNING;
                     return Status.RUNNING;
                 } else {
                     effect();
                     return terminateAndReturn(id, blackboard, Status.SUCCESS);
                 }
             } else {
-                return Status.FAILURE;
+                nodeStatusMap[id] = Status.FAILURE;
+                return Status.FAILURE; //TODO should be terminateandreturn?
             }
         }
     }
@@ -70,12 +74,14 @@ function getSequenceTick(id: number): CompositeTick {
             while (blackboard[id].currentIndex < astTicks.length) {
                 var childStatus = execute(astTicks[blackboard[id].currentIndex]);
 
-                if (childStatus == Status.RUNNING)
+                if (childStatus == Status.RUNNING) {
+                    nodeStatusMap[id] = Status.RUNNING;
                     return Status.RUNNING;
-                else if (childStatus == Status.FAILURE)
+                } else if (childStatus == Status.FAILURE) {
                     return terminateAndReturn(id, blackboard, Status.FAILURE);
-                else if (childStatus == Status.SUCCESS)
+                } else if (childStatus == Status.SUCCESS) {
                     blackboard[id].currentIndex += 1;
+                }
             }
             return terminateAndReturn(id, blackboard, Status.SUCCESS);
         }
@@ -93,12 +99,14 @@ function getSelectorTick(id: number): CompositeTick {
             while (blackboard[id].currentIndex < astTicks.length) {
                 var childStatus = execute(astTicks[blackboard[id].currentIndex]);
 
-                if (childStatus == Status.RUNNING)
+                if (childStatus == Status.RUNNING) {
+                    nodeStatusMap[id] = Status.RUNNING;
                     return Status.RUNNING;
-                else if (childStatus == Status.SUCCESS)
+                } else if (childStatus == Status.SUCCESS) {
                     return terminateAndReturn(id, blackboard, Status.SUCCESS);
-                else if (childStatus == Status.FAILURE)
+                } else if (childStatus == Status.FAILURE) {
                     blackboard[id].currentIndex += 1;
+                }
             }
             return terminateAndReturn(id, blackboard, Status.FAILURE);
         }
@@ -112,7 +120,7 @@ export function execute(astTick: Tick): Status {
 var globalIdCounter = 0;
 
 export function action(precondition: Precondition, effect: Effect, ticksRequired?: number): Tick {
-    return getActionTick(globalIdCounter++)(precondition, effect, ticksRequired)
+    return getActionTick(++globalIdCounter)(precondition, effect, ticksRequired)
 }
 
 export function guard(precondition: Precondition, astTick: Tick): Tick {
@@ -130,7 +138,7 @@ export function neg_guard(precondition: Precondition, astTick: Tick): Tick {
  * @returns {Tick}
  */
 export function sequence(astTicks: Tick[]): Tick {
-    return getSequenceTick(globalIdCounter++)(astTicks);
+    return getSequenceTick(++globalIdCounter)(astTicks);
 }
 
 /**
@@ -140,7 +148,15 @@ export function sequence(astTicks: Tick[]): Tick {
  * @returns {Tick}
  */
 export function selector(astTicks: Tick[]): Tick {
-    return getSelectorTick(globalIdCounter++)(astTicks);
+    return getSelectorTick(++globalIdCounter)(astTicks);
+}
+
+export function getLastNodeId(): number {
+    return globalIdCounter;
+}
+
+export function getNodeIdStatusMap() {
+    return nodeStatusMap;
 }
 
 /*--------------- APIs --------------- */
@@ -418,19 +434,18 @@ export function attachTreeToAgent(agent: Agent, tree: Tick) {
 //3.1
 //user actions
 //TODO add variables to user action texts
-var userInteractionObject = {
+var userInteractionObject: { text: string, userActionsText: string[], actionEffectsText: string } = {
     text: "",
     userActionsText: [],
     actionEffectsText: ""
 }
-var userInteractionTrees = [];
+var userInteractionTrees: Tick[] = [];
 var userActions = {};
 
 function runUserInteractionTrees() {
     userInteractionObject.text = "";
     userInteractionObject.userActionsText = [];
     userActions = {}; //{"Go to location X" : effect
-    console.log(userInteractionTrees);
     for (var i = 0; i < userInteractionTrees.length; i++) {
         execute(userInteractionTrees[i]);
     }
@@ -513,6 +528,7 @@ function getTextWithVariablesReplaced(text: string) {
 
 export function reset() {
     blackboard = {};
+    nodeStatusMap = {}
     globalIdCounter = 0;
     agents = new Array<Agent>();
     locationGraph = {};

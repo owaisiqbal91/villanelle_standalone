@@ -1,19 +1,19 @@
 import { Card, Code, Elevation, H5, Icon, Intent, ITreeNode, Tag, Tooltip, Tree } from '@blueprintjs/core';
 import * as React from 'react';
-import { node } from 'prop-types';
 
-export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: {} }, { nodes: ITreeNode[] }> {
+export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: {}, renderCurrentState: boolean, nodeIdToDatapathMap?: {}, nodeIdStatusMap?: {} }, { nodesExpanded: {} }> {
 
     errorDatapaths;
     constructor(props) {
         super(props);
-        console.log(this.props.doc);
-        console.log(this.props.errors);
-        this.errorDatapaths = Object.keys(this.props.errors);
-        var nodes = this.getNodeTree(this.props.doc, this.props.errors);
-        console.log(this.errorDatapaths);
+        console.log("tree constructed");
+        // console.log(this.props.doc);
+        // console.log(this.props.errors);
+        // console.log(this.props.nodeIdStatusMap);
+        // this.errorDatapaths = Object.keys(this.props.errors);
+        // var nodes = this.getNodeTree(this.props.doc, this.props.errors);
         this.state = {
-            nodes: nodes
+            nodesExpanded: {}
         }
     }
 
@@ -36,8 +36,9 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     hasCaret: true,
                     icon: "code-block",
                     label: "Initialization",
-                    isExpanded: false,
-                    childNodes: []
+                    isExpanded: this.shouldNodeExpand('/Initialization'),
+                    childNodes: [],
+                    nodeData: { text: "Initialization", dataPath: '/Initialization' }
                 }
                 var initializationChildNodes = this.getEffectsNodes(doc['Initialization'], errors, "/Initialization");
                 initializationNode.childNodes = initializationChildNodes;
@@ -58,8 +59,9 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         hasCaret: true,
                         icon: "person",
                         label: key,
-                        isExpanded: false,
-                        childNodes: Array.isArray(childNode) ? childNode : [childNode]
+                        isExpanded: this.shouldNodeExpand('/' + key),
+                        childNodes: Array.isArray(childNode) ? childNode : [childNode],
+                        nodeData: { text: key, dataPath: "/" + key }
                     }
                 }
                 treeNodes.push(agentNode);
@@ -77,8 +79,9 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     hasCaret: true,
                     icon: "social-media",
                     label: "User Interaction",
-                    isExpanded: this.isDatapathOnErrorPath('/User Interaction'),
-                    childNodes: []
+                    isExpanded: this.shouldNodeExpand('/User Interaction'),
+                    childNodes: [],
+                    nodeData: { text: "User Interaction", dataPath: "/User Interaction" }
                 }
                 var interactionChildNodes = this.getArrayNode(doc['User Interaction'], errors, "/User Interaction");
                 userInteractionNode.childNodes = interactionChildNodes;
@@ -106,10 +109,10 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         id: this.count,
                         hasCaret: true,
                         icon: "help",
-                        isExpanded: false,
+                        isExpanded: this.shouldNodeExpand(dataPath + '/condition') || this.shouldNodeExpand(dataPath),
                         label: obj['condition'],
                         childNodes: [],
-                        nodeData: { text: obj['condition'] }
+                        nodeData: { text: obj['condition'], dataPath: dataPath + '/condition' }
                     };
                 }
             }
@@ -122,11 +125,11 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
-                        isExpanded: false,
+                        isExpanded: this.shouldNodeExpand(dataPath + '/sequence'),
                         icon: "arrow-right",
                         label: "sequence",
                         childNodes: [],
-                        nodeData: { text: 'sequence' }
+                        nodeData: { text: 'sequence', dataPath: dataPath + '/sequence' }
                     };
                     nodeToBuild.childNodes = this.getArrayNode(obj['sequence'], errors, dataPath + "/sequence");
                 }
@@ -138,11 +141,11 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
-                        isExpanded: false,
+                        isExpanded: this.shouldNodeExpand(dataPath + '/selector'),
                         icon: "flow-branch",
                         label: "selector",
                         childNodes: [],
-                        nodeData: { text: 'selector' }
+                        nodeData: { text: 'selector', dataPath: dataPath + '/selector' }
                     };
                     nodeToBuild.childNodes = this.getArrayNode(obj['selector'], errors, dataPath + "/selector");
                 }
@@ -154,10 +157,10 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         id: this.count,
                         hasCaret: true,
                         icon: "help",
-                        isExpanded: false,
+                        isExpanded: this.shouldNodeExpand(dataPath + '/effects'),
                         label: "true",
                         childNodes: [],
-                        nodeData: { text: 'true' }
+                        nodeData: { text: 'true', dataPath: dataPath + '/effects' }
                     };
                 }
 
@@ -171,7 +174,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                             hasCaret: false,
                             icon: "comment",
                             label: <Tooltip content="effect text"><i>{'"' + obj['effect text'] + '"'}</i></Tooltip>,
-                            nodeData: { text: <i>{obj['effect text']}</i> }
+                            nodeData: { text: <i>{obj['effect text']}</i>, dataPath: dataPath + '/effect text'}
                         });
                     }
                 }
@@ -201,12 +204,12 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         hasCaret: false,
                         icon: "paragraph",
                         label: <Tooltip content="description"><i>{'"' + obj['description'] + '"'}</i></Tooltip>,
-                        nodeData: { text: <i>{obj['description']}</i> }
+                        nodeData: { text: <i>{obj['description']}</i>, dataPath: dataPath + '/description' }
                     };
                 }
             } else if (obj['user action']) {
                 if (errors[dataPath + '/user action']) {
-                    nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/user action'], 'user action');
+                    nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/user action'].message, 'user action');
                 } else {
                     this.count++;
                     nodeToBuild = {
@@ -215,7 +218,8 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                         icon: "select",
                         label: "user action",
                         childNodes: [],
-                        nodeData: { text: "user action" }
+                        isExpanded: this.shouldNodeExpand(dataPath + '/user action'),
+                        nodeData: { text: "user action", dataPath: dataPath + '/user action' }
                     }
                     if (obj['user action']['action text'] !== undefined) {
                         if (errors[dataPath + '/user action/action text']) {
@@ -226,8 +230,9 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                                 id: this.count,
                                 hasCaret: false,
                                 icon: "font",
+                                isExpanded: this.shouldNodeExpand(dataPath + '/user action/action text'),
                                 label: <b>{'"' + obj['user action']['action text'] + '"'}</b>,
-                                nodeData: { text: <b>{obj['user action']['action text']}</b> }
+                                nodeData: { text: <b>{obj['user action']['action text']}</b>, dataPath: dataPath + '/user action/action text' }
                             })
                         }
                     }
@@ -244,7 +249,8 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                                 icon: "tree",
                                 label: "effect tree",
                                 childNodes: [],
-                                nodeData: { text: "effect tree" }
+                                isExpanded: this.shouldNodeExpand(dataPath + '/user action/effect tree'),
+                                nodeData: { text: "effect tree", dataPath: dataPath + '/user action/effect tree' }
                             };
                         }
 
@@ -260,8 +266,8 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             if (nodeToBuild !== undefined) {
                 if (conditionNode !== undefined) {
                     conditionNode.childNodes = Array.isArray(nodeToBuild) ? nodeToBuild : [nodeToBuild];
-                    return errorForObject ? this.makeErrorTreeNodeForExistingNode(conditionNode, errorForObject) : conditionNode;
-                } else return errorForObject ? this.makeErrorTreeNodeForExistingNode(nodeToBuild, errorForObject) : nodeToBuild;
+                    return errorForObject && !conditionNode.nodeData.isError ? this.makeErrorTreeNodeForExistingNode(conditionNode, errorForObject) : conditionNode;
+                } else return errorForObject && !nodeToBuild.nodeData.isError ? this.makeErrorTreeNodeForExistingNode(nodeToBuild, errorForObject) : nodeToBuild;
             } else if (errorForObject !== undefined) {
                 return this.getErrorTreeNode(errorForObject.message, obj + '');
             }
@@ -299,7 +305,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     hasCaret: false,
                     label: <Code>{effect}</Code>,
                     icon: "code",
-                    nodeData: { text: <Code>{effect}</Code> }
+                    nodeData: { text: <Code>{effect}</Code>, dataPath: dataPath + '/' + index }
                 }
             }
         });
@@ -322,7 +328,14 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             label: (<Tooltip content={errorMessage} intent={Intent.DANGER}>
                 <Tag intent={Intent.DANGER} large={true} interactive={false} active={false} minimal={true}>{text}</Tag>
             </Tooltip>),
+            isExpanded: true,
+            nodeData: { isError: true }
         }
+    }
+
+    private shouldNodeExpand(dataPath: string) {
+        let dataPathOnError = this.isDatapathOnErrorPath(dataPath);
+        return dataPathOnError ? true : this.state.nodesExpanded[dataPath];
     }
 
     private isDatapathOnErrorPath(dataPath: string) {
@@ -339,15 +352,22 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
 
     private handleNodeCollapse = (nodeData: ITreeNode) => {
         nodeData.isExpanded = false;
-        this.setState(this.state);
+        var nodesExpanded = this.state.nodesExpanded;
+        nodesExpanded[nodeData.nodeData['dataPath']] = false;
+        this.setState({nodesExpanded: nodesExpanded});
     };
 
     private handleNodeExpand = (nodeData: ITreeNode) => {
         nodeData.isExpanded = true;
-        this.setState(this.state);
+        var nodesExpanded = this.state.nodesExpanded;
+        nodesExpanded[nodeData.nodeData['dataPath']] = true;
+        this.setState({nodesExpanded: nodesExpanded});
     };
 
     render() {
+        this.errorDatapaths = Object.keys(this.props.errors);
+        var nodes = this.getNodeTree(this.props.doc, this.props.errors);
+
         var tree;
         if (this.props.errors['/']) {
             tree = <H5>
@@ -358,7 +378,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             </H5>
         } else {
             tree = <div><H5>Tree Visualization</H5>
-                <Tree contents={this.state.nodes}
+                <Tree contents={nodes}
                     onNodeCollapse={this.handleNodeCollapse}
                     onNodeExpand={this.handleNodeExpand}>
                 </Tree></div>
@@ -375,5 +395,18 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
             icon: "code",
             label: (<Tag intent={Intent.SUCCESS} large={true} interactive={false} active={false} minimal={true}>Initialization</Tag>)
         },];
+
+        var nodes: ITreeNode[] = [{
+            id: 0,
+            hasCaret: true,
+            icon: "code",
+            label: (<Tag intent={Intent.SUCCESS} large={true} interactive={false} active={false} minimal={true}>Initialization</Tag>),
+            nodeData: {dataPath: "/Initialization"},
+            isExpanded: this.state.nodesExpanded['/Initialization'],
+            childNodes: [{
+                id: 1,
+                label: "another"
+            }]
+        }]
     */
 }

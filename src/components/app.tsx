@@ -1,33 +1,34 @@
-import { Callout, Intent, Navbar, Divider, H5, Elevation, Card, H3 } from '@blueprintjs/core';
+import { Callout, Intent } from '@blueprintjs/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
+import { Rnd } from "react-rnd";
 import * as yamlParser from '../parsing/yaml/yaml_parser';
 import * as scripting from '../scripting';
 import { VillanelleAceEditor } from './villanelle_ace_editor';
 import { VillanelleNavbar } from './villanelle_navbar';
 import { VillanellePlayArea } from './villanelle_playarea';
 import { VillanelleTreeVisualizer } from './villanelle_tree_visualizer';
-import { Mosaic, MosaicWindow } from 'react-mosaic-component';
-import { number } from 'prop-types';
-import { Rnd } from "react-rnd";
 
 var electron = require('electron');
 
-export class App extends React.Component<{}, { currentTab: string, code: string, errors: {}, doc: {} }> {
+export class App extends React.Component<{}, { currentTab: string, code: string, errors: {}, doc: {}, nodeIdToDatapathMap: {}, nodeIdStatusMap: {}}> {
   constructor(props) {
     super(props);
-    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test_error.yml"), 'utf8');
-    var parsedObject = this.initializeGame(yamlString);
+    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test.yml"), 'utf8');
+    var initializedObject = this.initializeGame(yamlString);
     this.state = {
       currentTab: 'Script',
       code: yamlString,
-      errors: this.getErrorsByDataPath(parsedObject.errors),
-      doc: parsedObject.doc
+      errors: this.getErrorsByDataPath(initializedObject.errors),
+      doc: initializedObject.doc,
+      nodeIdToDatapathMap: initializedObject.nodeIdToDatapathMap,
+      nodeIdStatusMap: initializedObject.nodeIdStatusMap
     };
 
     this.setCurrentTab = this.setCurrentTab.bind(this);
     this.setCode = this.setCode.bind(this);
+    this.setNodeIdStatusMap = this.setNodeIdStatusMap.bind(this);
   }
 
   public setCurrentTab(currentTab) {
@@ -35,8 +36,21 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
   }
 
   public setCode(code) {
-    var parsedObject = this.initializeGame(code);
-    this.setState({ code: code, errors: this.getErrorsByDataPath(parsedObject.errors), doc: parsedObject.doc });
+    var initializedObject = this.initializeGame(code);
+    this.setState({
+      code: code,
+      errors: this.getErrorsByDataPath(initializedObject.errors),
+      doc: initializedObject.doc,
+      nodeIdToDatapathMap: initializedObject.nodeIdToDatapathMap,
+      nodeIdStatusMap: initializedObject.nodeIdStatusMap
+    });
+  }
+
+  public setNodeIdStatusMap(nodeIdStatusMap) {
+    console.log(nodeIdStatusMap);
+    this.setState({
+      nodeIdStatusMap: nodeIdStatusMap
+    });
   }
 
   initializeGame(yamlString) {
@@ -44,11 +58,13 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
     let parsedObject = yamlParser.parse(yamlString);
     let errors = parsedObject.errors;
     let doc = parsedObject.doc;
+    let nodeIdToDatapathMap = parsedObject.nodeIdToDatapathMap;
+    let nodeIdStatusMap = scripting.getNodeIdStatusMap();
 
     if (errors.length == 0) {
       scripting.initialize();
     }
-    return { doc: doc, errors: errors };
+    return { doc: doc, errors: errors, nodeIdToDatapathMap: nodeIdToDatapathMap, nodeIdStatusMap: nodeIdStatusMap };
   }
 
   getCallout() {
@@ -72,48 +88,45 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
   }
 
   render() {
-
+    console.log("app rendered");
     let mainPage;
+    var screen = electron.screen.getPrimaryDisplay();
+    let windowWidth = screen.size.width;
+    let windowHeight = screen.size.height;
 
     if (this.state.currentTab === 'Script') {
       let compilationResult = this.getCallout();
 
-      /* mainPage = <div>
-        <VillanelleAceEditor handler={this.setCode} code={this.state.code} />
+      let aceEditorPanel = <div>
+        <VillanelleAceEditor handler={this.setCode} code={this.state.code} height={windowHeight - 200} />
         {compilationResult}
-        <VillanelleTreeVisualizer doc={this.state.doc} errors={this.state.errors}/>
-      </div>; */
-      var screen = electron.screen.getPrimaryDisplay();
-      let windowWidth = screen.size.width;
-      let windowHeight = screen.size.height;
-      mainPage = <div>
-        <Rnd
-          default={{
-            x: 0,
-            y: 0,
-            width: windowWidth / 2,
-            height: windowHeight,
-          }}
-          disableDragging={true}
-        >
-          <VillanelleAceEditor handler={this.setCode} code={this.state.code} height={windowHeight - 200} />
-          {compilationResult}
-        </Rnd>
-        <Rnd
-          default={{
-            x: windowWidth / 2,
-            y: 0,
-            width: windowWidth / 2,
-            height: windowHeight,
-          }}
-          disableDragging={true}
-        >
-          <VillanelleTreeVisualizer key={this.state.code} doc={this.state.doc} errors={this.state.errors} />
-        </Rnd>
-      </div>
+      </div>;
+      let treeVisualizerPanel = <VillanelleTreeVisualizer
+        // key={this.state.code + this.state.currentTab}
+        doc={this.state.doc}
+        errors={this.state.errors}
+        renderCurrentState={false} />
+
+      mainPage = this.getSplitPane(windowWidth, windowHeight, aceEditorPanel, treeVisualizerPanel);
+
     } else if (this.state.currentTab === 'Play') {
+
       let uio = scripting.getUserInteractionObject();
-      mainPage = <VillanellePlayArea hasErrors={Object.keys(this.state.errors).length != 0} uio={uio} />;
+      let hasErrors = Object.keys(this.state.errors).length != 0;
+      if (hasErrors) {
+        mainPage = <VillanellePlayArea hasErrors={true} uio={uio} handler={this.setNodeIdStatusMap}/>;
+      } else {
+        let playAreaPanel = <VillanellePlayArea hasErrors={false} uio={uio} handler={this.setNodeIdStatusMap}/>;
+        let treeVisualizerPanel = <VillanelleTreeVisualizer
+          // key={this.state.code + this.state.currentTab}
+          doc={this.state.doc}
+          errors={this.state.errors}
+          renderCurrentState={true}
+          nodeIdToDatapathMap={this.state.nodeIdToDatapathMap}
+          nodeIdStatusMap={this.state.nodeIdStatusMap} />
+
+        mainPage = this.getSplitPane(windowWidth, windowHeight, playAreaPanel, treeVisualizerPanel);
+      }
     }
 
     return (
@@ -122,6 +135,33 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
         {mainPage}
       </div>
     );
+  }
+
+  getSplitPane(windowWidth, windowHeight, leftPaneElement, rightPaneElement) {
+    return <div>
+      <Rnd
+        default={{
+          x: 0,
+          y: 0,
+          width: windowWidth / 2,
+          height: windowHeight,
+        }}
+        disableDragging={true}
+      >
+        {leftPaneElement}
+      </Rnd>
+      <Rnd
+        default={{
+          x: windowWidth / 2,
+          y: 0,
+          width: windowWidth / 2,
+          height: windowHeight,
+        }}
+        disableDragging={true}
+      >
+        {rightPaneElement}
+      </Rnd>
+    </div>
   }
 
   getErrorsByDataPath(errors) {

@@ -12,6 +12,7 @@ export class VillanelleAceEditor extends React.Component<{ code: string, handler
 
     constructor(props) {
         super(props);
+        console.log("editor constructed")
         this.onChange = this.onChange.bind(this);
     }
 

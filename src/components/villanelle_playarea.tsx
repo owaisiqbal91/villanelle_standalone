@@ -1,12 +1,12 @@
 import { Button, ButtonGroup, Callout, Card, ControlGroup, Divider, NonIdealState } from '@blueprintjs/core';
 import * as React from 'react';
-import { executeUserAction, worldTick } from '../scripting';
+import { executeUserAction, worldTick, getNodeIdStatusMap } from '../scripting';
 
-export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, uio: any }, {}> {
+export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, uio: any, handler: ({}) => void }, {}> {
 
     constructor(props) {
         super(props);
-
+        console.log("play area constructed");
         this.actionTaken = this.actionTaken.bind(this);
     }
 
@@ -15,6 +15,7 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
         if (selectedAction !== undefined) {
             executeUserAction(selectedAction);
             let uio = worldTick();
+            this.props.handler(getNodeIdStatusMap());
             this.setState({ uio: uio });
         }
     }
