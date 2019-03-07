@@ -1,0 +1,77 @@
+Initialization:
+  - trade := true
+  - askedAbout := ''
+  - worship := true
+  - farewell := false
+  - bishop := false
+  - orz_npc := 'Orz the City Gate Barnacle'
+  - bishop_npc := 'Archnecrobishop Tir'
+  - lisa_npc := 'Lissa Ratdaughter'
+  - current_npc := orz_npc
+
+Orz:
+  condition: current_npc == orz_npc
+  selector:
+    - condition: askedAbout == 'trade'
+      selector:
+          - condition: 'farewell != true'
+            effect text: "What's that? A letter of introduction to [Archnecrobishop Tir]? Well, I suppose no-one cares what the leader of a dead religion spends his coin on. I'll let you through. [Farewell]."
+            effects:
+              - farewell := true
+              - bishop := true
+            ticks: 0
+          - condition: 'farewell'
+            effect text: "Foreign concept to me. They just let me grow here as long as I gobble up the odd undesirable."
+            effects:
+              - ''
+            ticks: 0
+    - condition: askedAbout == 'worship'
+      effect text: "Always changing. One lot in, then out, new ones coming up all the time, then driven out or changed beyond recognition. What a palaver."
+      effects:
+        - ''
+      ticks: 0
+    - condition: askedAbout == 'bishop'
+      effect text: "He's never passed through here, but he used to get a lot of visitors. You're the first in a long time, mind."
+      effects:
+        - ''
+      ticks: 0
+    - condition: askedAbout == 'farewell'
+      effects:
+        - current_npc := lisa_npc
+      ticks: 0
+
+User Interaction:
+  - selector:
+      - condition: current_npc == orz_npc
+        description: "You there! Hooded stranger! Yes, I can talk. Expect us to waste good firegas raising this portcullis for you, eh? What's your business? [Trade] or [worship]?"
+      - condition: current_npc == lisa_npc
+        description: "Pssst! The rat queen sent me. She knows who you are. She knows what you want. And she's on your side.\nMe? I've been scraping a life on these streets all my life. Born, plopped straight out onto the cobbles and left to be raised by the rats. No pocket can't be picked by these fingers; no rumours what can escape these ears; no citizen this nose can't sniff out.\nYou say a name, I'll lead you right to 'em."
+  - sequence:
+      - condition: 'trade'
+        user action:
+          action text: "Trade"
+          effect tree:
+            effects:
+              - askedAbout := 'trade'
+            ticks: 0
+      - condition: 'worship'
+        user action:
+          action text: "Worship"
+          effect tree:
+            effects:
+              - askedAbout := 'worship'
+            ticks: 0
+      - condition: 'bishop'
+        user action:
+          action text: "Archnecrobishop Tir"
+          effect tree:
+            effects:
+              - askedAbout := 'bishop'
+            ticks: 0
+      - condition: 'farewell'
+        user action:
+          action text: "Farewell"
+          effect tree:
+            effects:
+              - askedAbout := 'farewell'
+            ticks: 0

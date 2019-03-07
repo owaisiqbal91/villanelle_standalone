@@ -63,6 +63,8 @@ export class VillanelleGrammarVisitorImpl extends VillanelleGrammarVisitor {
                     return () => exprResults[0]() != exprResults[2]();
                 }
                 case '==': {
+                    console.log(exprResults[0]());
+                    console.log(exprResults[2]());
                     return () => exprResults[0]() == exprResults[2]();
                 }
             }
@@ -89,6 +91,14 @@ export class VillanelleGrammarVisitorImpl extends VillanelleGrammarVisitor {
     }
 
     visitString = (ctx) => {
-        return () => ctx.children.length > 2 ? ctx.children[1].symbol.text : '';
+        if (ctx.children.length > 2) {
+            var str = ctx.children[1].symbol.text;
+            for (var i = 2; i < ctx.children.length - 1; i++) {
+                str += ' ' + ctx.children[i].symbol.text;
+            }
+            return () => str;
+        } else {
+            return () => '';
+        }
     }
 }

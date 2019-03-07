@@ -39,7 +39,7 @@ let schema = {
         userInteraction: {},
         descriptionNode: {
             type: "object",
-            properties: { "description": { type: "string" } },
+            properties: { "description": { type: "string" }, "condition": { type: "string" } },
             additionalProperties: false,
             errorMessage: "description must be a string"
         },

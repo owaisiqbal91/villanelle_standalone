@@ -382,6 +382,7 @@ export function setAgentVariable(agent: string, varName: string, value: any) {
 
 export function getVariable(varName: string): any {
     if (isUndefined(variables[varName])) {
+        console.trace();
         console.log("Variable " + varName + " not set!");
         return;
     }
@@ -454,10 +455,10 @@ function runUserInteractionTrees() {
 export let displayDescriptionAction = (text: string) =>
     action(
         () => true,
-        () => userInteractionObject.text += "\n" + getTextWithVariablesReplaced(text),
+        () => userInteractionObject.text += getTextWithVariablesReplaced(text),
         0
     );
-export let displayActionEffectText = (text: string) => userInteractionObject.actionEffectsText += "\n" + getTextWithVariablesReplaced(text);
+export let displayActionEffectText = (text: string) => userInteractionObject.actionEffectsText += getTextWithVariablesReplaced(text);
 
 export let addUserActionTree = (text: string, effectTree: Tick) => action(
     () => true,
@@ -511,13 +512,14 @@ export function worldTick(): {} {
 
 function getTextWithVariablesReplaced(text: string) {
     let words = text.split(' ');
-    let re = new RegExp('[A-Za-z0-9]+');
+    let re = new RegExp('[A-Za-z0-9_]+');
     for (var i = 0; i < words.length; i++) {
         if (words[i].startsWith('$')) {
             var arr = re.exec(words[i]);
             let variableName = arr === null ? "" : arr[0];
 
             let variableValue = getVariable(variableName);
+            console.log(variableValue);
             if (variableValue !== undefined)
                 words[i] = words[i].replace('$' + variableName, variableValue);
         }

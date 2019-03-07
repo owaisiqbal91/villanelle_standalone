@@ -12,7 +12,7 @@ fragment S : ('S'|'s');
 
 //TOKENS
 BOOL : (T R U E | F A L S E);
-ID : [a-zA-Z]+ ; // match identifiers
+ID : [a-zA-Z_0-9]+ ; // match identifiers
 INT : [0-9]+ ; // match integers
 NEWLINE:'\r'? '\n' ; // return newlines to parser (end-statement signal)
 WS : [ \t]+ -> skip ; // toss out whitespace
@@ -36,7 +36,7 @@ bool: BOOL;
 
 integer: INT;
 
-string: ('\'') .*? ('\'');
+string: ('\'').*?('\'');
 
 id: ID;
 

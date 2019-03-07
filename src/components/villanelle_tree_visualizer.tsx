@@ -1,15 +1,23 @@
-import { Card, Code, Elevation, H5, Icon, Intent, ITreeNode, Tag, Tooltip, Tree } from '@blueprintjs/core';
+import { Card, Code, Elevation, H5, Icon, Intent, ITreeNode, Tag, Tooltip, Tree, IconName } from '@blueprintjs/core';
 import * as React from 'react';
+import { Status } from '../scripting';
 
-export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors: {}, renderCurrentState: boolean, nodeIdToDatapathMap?: {}, nodeIdStatusMap?: {} }, { nodesExpanded: {} }> {
+export class VillanelleTreeVisualizer extends React.Component<{
+    doc: {},
+    errors: {},
+    showDebugState: boolean,
+    nodeIdToDatapathMap?: {},
+    nodeIdStatusMap?: {}
+}, {
+    nodesExpanded: {}
+}> {
 
     errorDatapaths;
+
     constructor(props) {
         super(props);
-        console.log("tree constructed");
         // console.log(this.props.doc);
         // console.log(this.props.errors);
-        // console.log(this.props.nodeIdStatusMap);
         // this.errorDatapaths = Object.keys(this.props.errors);
         // var nodes = this.getNodeTree(this.props.doc, this.props.errors);
         this.state = {
@@ -96,6 +104,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
     //the third parameter is the one passed on from errors that have paths on array items
     getObjectNode(obj, errors, dataPath, errorForObject?) {
 
+        var status;
         if (obj !== null) {
             var conditionNode, nodeToBuild;
             if (obj['condition'] !== undefined) {
@@ -122,12 +131,13 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/sequence'].message, 'sequence');
                 } else {
                     this.count++;
+                    status = this.getStatusForNode(dataPath + '/selector');
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
                         isExpanded: this.shouldNodeExpand(dataPath + '/sequence'),
-                        icon: "arrow-right",
-                        label: "sequence",
+                        icon: this.createDebugIntentForIcon("arrow-right", status),
+                        label: this.createDebugIntentForLabel("sequence", status),
                         childNodes: [],
                         nodeData: { text: 'sequence', dataPath: dataPath + '/sequence' }
                     };
@@ -138,12 +148,13 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                     nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/selector'].message, 'selector');
                 } else {
                     this.count++;
+                    status = this.getStatusForNode(dataPath + '/selector');
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
                         isExpanded: this.shouldNodeExpand(dataPath + '/selector'),
-                        icon: "flow-branch",
-                        label: "selector",
+                        icon: this.createDebugIntentForIcon("flow-branch", status),
+                        label: this.createDebugIntentForLabel("selector", status),
                         childNodes: [],
                         nodeData: { text: 'selector', dataPath: dataPath + '/selector' }
                     };
@@ -153,6 +164,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                 nodeToBuild = this.getEffectsNodes(obj['effects'], errors, dataPath + "/effects");
                 if (conditionNode === undefined) {
                     this.count++;
+                    status = this.getStatusForNode(dataPath + '/effects');
                     conditionNode = {
                         id: this.count,
                         hasCaret: true,
@@ -174,7 +186,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
                             hasCaret: false,
                             icon: "comment",
                             label: <Tooltip content="effect text"><i>{'"' + obj['effect text'] + '"'}</i></Tooltip>,
-                            nodeData: { text: <i>{obj['effect text']}</i>, dataPath: dataPath + '/effect text'}
+                            nodeData: { text: <i>{obj['effect text']}</i>, dataPath: dataPath + '/effect text' }
                         });
                     }
                 }
@@ -335,6 +347,7 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
 
     private shouldNodeExpand(dataPath: string) {
         let dataPathOnError = this.isDatapathOnErrorPath(dataPath);
+        //TODO uncomment below
         return dataPathOnError ? true : this.state.nodesExpanded[dataPath];
     }
 
@@ -350,21 +363,65 @@ export class VillanelleTreeVisualizer extends React.Component<{ doc: {}, errors:
         return false;
     }
 
+    private getStatusForNode(dataPath: string) {
+        let nodeStatus: Status = this.dataPathToNodeStatusMap[dataPath];
+        if (this.props.showDebugState) {
+            return nodeStatus;
+        }
+    }
+
+    private createDebugIntentForIcon(iconName: IconName, status: Status) {
+        switch (status) {
+            case Status.SUCCESS:
+                return <Icon icon={iconName} color="green" />
+            case Status.RUNNING:
+                return <Icon icon={iconName} color="blue" />
+            case Status.FAILURE:
+                return <Icon icon={iconName} color="red" />
+            default:
+                return iconName;
+        }
+    }
+
+    private createDebugIntentForLabel(labelElement, status: Status) {
+        switch (status) {
+            case Status.SUCCESS:
+                return (<Tag intent={Intent.SUCCESS} large={true} interactive={false} active={false} minimal={true}>{labelElement}</Tag>)
+            case Status.RUNNING:
+                return (<Tag intent={Intent.PRIMARY} large={true} interactive={false} active={false} minimal={true}>{labelElement}</Tag>)
+            case Status.FAILURE:
+                return (<Tag intent={Intent.DANGER} large={true} interactive={false} active={false} minimal={true}>{labelElement}</Tag>)
+            default:
+                return labelElement
+        }
+    }
+
     private handleNodeCollapse = (nodeData: ITreeNode) => {
         nodeData.isExpanded = false;
         var nodesExpanded = this.state.nodesExpanded;
         nodesExpanded[nodeData.nodeData['dataPath']] = false;
-        this.setState({nodesExpanded: nodesExpanded});
+        this.setState({ nodesExpanded: nodesExpanded });
     };
 
     private handleNodeExpand = (nodeData: ITreeNode) => {
         nodeData.isExpanded = true;
         var nodesExpanded = this.state.nodesExpanded;
         nodesExpanded[nodeData.nodeData['dataPath']] = true;
-        this.setState({nodesExpanded: nodesExpanded});
+        this.setState({ nodesExpanded: nodesExpanded });
     };
 
+    dataPathToNodeStatusMap = {};
     render() {
+        //TODO temporary, remove later
+        if (this.props.showDebugState) {
+            Object.keys(this.props.nodeIdToDatapathMap).forEach(key => {
+                this.dataPathToNodeStatusMap[this.props.nodeIdToDatapathMap[key]] = this.props.nodeIdStatusMap[key];
+            });
+            // console.log(this.dataPathToNodeStatusMap);
+            // console.log(this.props.nodeIdStatusMap);
+            // console.log(this.props.nodeIdToDatapathMap);
+        }
+
         this.errorDatapaths = Object.keys(this.props.errors);
         var nodes = this.getNodeTree(this.props.doc, this.props.errors);
 

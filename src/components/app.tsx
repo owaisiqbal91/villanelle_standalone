@@ -15,10 +15,10 @@ var electron = require('electron');
 export class App extends React.Component<{}, { currentTab: string, code: string, errors: {}, doc: {}, nodeIdToDatapathMap: {}, nodeIdStatusMap: {}}> {
   constructor(props) {
     super(props);
-    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test.yml"), 'utf8');
+    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/weird_city_interloper.yml"), 'utf8');
     var initializedObject = this.initializeGame(yamlString);
     this.state = {
-      currentTab: 'Script',
+      currentTab: 'Play',
       code: yamlString,
       errors: this.getErrorsByDataPath(initializedObject.errors),
       doc: initializedObject.doc,
@@ -47,7 +47,6 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
   }
 
   public setNodeIdStatusMap(nodeIdStatusMap) {
-    console.log(nodeIdStatusMap);
     this.setState({
       nodeIdStatusMap: nodeIdStatusMap
     });
@@ -88,7 +87,6 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
   }
 
   render() {
-    console.log("app rendered");
     let mainPage;
     var screen = electron.screen.getPrimaryDisplay();
     let windowWidth = screen.size.width;
@@ -102,10 +100,9 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
         {compilationResult}
       </div>;
       let treeVisualizerPanel = <VillanelleTreeVisualizer
-        // key={this.state.code + this.state.currentTab}
         doc={this.state.doc}
         errors={this.state.errors}
-        renderCurrentState={false} />
+        showDebugState={false} />
 
       mainPage = this.getSplitPane(windowWidth, windowHeight, aceEditorPanel, treeVisualizerPanel);
 
@@ -118,10 +115,9 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
       } else {
         let playAreaPanel = <VillanellePlayArea hasErrors={false} uio={uio} handler={this.setNodeIdStatusMap}/>;
         let treeVisualizerPanel = <VillanelleTreeVisualizer
-          // key={this.state.code + this.state.currentTab}
           doc={this.state.doc}
           errors={this.state.errors}
-          renderCurrentState={true}
+          showDebugState={true}
           nodeIdToDatapathMap={this.state.nodeIdToDatapathMap}
           nodeIdStatusMap={this.state.nodeIdStatusMap} />
 
