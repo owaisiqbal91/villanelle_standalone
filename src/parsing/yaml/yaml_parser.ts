@@ -180,12 +180,14 @@ export function parse(yamlString: string) {
     }
 
     var nodeIdToDatapathMap = {}
+    var rootNodeDatapaths = [];
     if (doc !== undefined) {
         for (let key in doc) {
             if (!reservedKeywords.includes(key)) {
                 let agent = scripting.addAgent(key);
                 var tree = visitObject(doc[key], errors, "/" + key, nodeIdToDatapathMap);
                 scripting.attachTreeToAgent(agent, tree);
+                rootNodeDatapaths.push("/" + key + '/' + getRootNodeKey(doc[key]));
             }
         }
 
@@ -197,12 +199,25 @@ export function parse(yamlString: string) {
 
         if (doc['User Interaction'] !== undefined) {
             var userInteractionArr = doc['User Interaction'];
-            if (Array.isArray(userInteractionArr))
+            if (Array.isArray(userInteractionArr)) {
                 userInteractionArr.forEach((interactionObj, index) => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction/' + index, nodeIdToDatapathMap)));
+                userInteractionArr.forEach((interactionObj, index) => {
+                    rootNodeDatapaths.push('/User Interaction/' + index + '/' + getRootNodeKey(interactionObj));
+                });
+            }
         }
     }
 
-    return { doc: doc, errors: errors, nodeIdToDatapathMap: nodeIdToDatapathMap };
+    return { doc: doc, errors: errors, nodeIdToDatapathMap: nodeIdToDatapathMap, rootNodeDatapaths: rootNodeDatapaths };
+}
+
+function getRootNodeKey(obj) {
+    if (obj['sequence'])
+        return 'sequence'
+    else if (obj['selector'])
+        return 'selector'
+    else if (obj['effects'])
+        return 'effects'
 }
 
 function visitObject(obj: {}, errors: any[], dataPath: string, nodeIdToDatapathMap: {}) {
@@ -222,13 +237,15 @@ function visitObject(obj: {}, errors: any[], dataPath: string, nodeIdToDatapathM
 
         //user interaction
         if (obj['description'] !== undefined) {
-            let descriptionAction = scripting.displayDescriptionAction(obj['description']);
-            return condition ? scripting.guard(conditionLambda, descriptionAction) : descriptionAction;
+            let descriptionAction = createDescriptionAction(obj['description'], dataPath + '/description', nodeIdToDatapathMap); //scripting.displayDescriptionAction(obj['description']);
+            //return condition ? scripting.guard(conditionLambda, descriptionAction) : descriptionAction;
+            return condition ? createGuard(conditionLambda, descriptionAction, dataPath + '/condition', nodeIdToDatapathMap) : descriptionAction;
         }
         let userAction = obj['user action'] !== undefined && obj['user action'] !== null;
         if (userAction) {
             let userAction = visitUserAction(obj['user action'], errors, dataPath + '/user action', nodeIdToDatapathMap);
-            return condition ? scripting.guard(conditionLambda, userAction) : userAction;
+            //return condition ? scripting.guard(conditionLambda, userAction) : userAction;
+            return condition ? createGuard(conditionLambda, userAction, dataPath + '/condition', nodeIdToDatapathMap) : userAction;
         }
 
         var sequenceOrSelectorTick;
@@ -254,7 +271,8 @@ function visitObject(obj: {}, errors: any[], dataPath: string, nodeIdToDatapathM
             if (effects) {
                 return createAction(conditionLambda, effectsLambda, obj['ticks'], dataPath, nodeIdToDatapathMap);
             } else {//guard
-                return scripting.guard(conditionLambda, sequenceOrSelectorTick);
+                //return scripting.guard(conditionLambda, sequenceOrSelectorTick);
+                return createGuard(conditionLambda, sequenceOrSelectorTick, dataPath + '/condition', nodeIdToDatapathMap);
             }
         } else if (effects) { //action without condition
             return createAction(() => true, effectsLambda, obj['ticks'], dataPath, nodeIdToDatapathMap);
@@ -280,6 +298,24 @@ function createAction(condition, effects, ticks, dataPath, nodeIdToDatapathMap: 
     var action = scripting.action(condition, effects, ticks);
     nodeIdToDatapathMap[scripting.getLastNodeId()] = dataPath;
     return action;
+}
+
+function createDescriptionAction(description, dataPath, nodeIdToDatapathMap) {
+    var descriptionAction = scripting.displayDescriptionAction(description);
+    nodeIdToDatapathMap[scripting.getLastNodeId()] = dataPath;
+    return descriptionAction;
+}
+
+function createAddUserAction(actionText, effectTree, dataPath, nodeIdToDatapathMap) {
+    var addUserAction = scripting.addUserActionTree(actionText, effectTree);
+    nodeIdToDatapathMap[scripting.getLastNodeId()] = dataPath;
+    return addUserAction;
+}
+
+function createGuard(condition, childTick, dataPath, nodeIdToDatapathMap: {}) {
+    var guard = scripting.guard(condition, childTick);
+    nodeIdToDatapathMap[scripting.getLastNodeId()] = dataPath;
+    return guard;
 }
 
 function visitArray(arr: [], errors: any[], dataPath: string, nodeIdToDatapathMap: {}): any[] {
@@ -329,5 +365,5 @@ function visitUserAction(userActionObj, errors: any[], dataPath: string, nodeIdT
     let actionText = userActionObj['action text'];
     let effectTree = visitObject(userActionObj['effect tree'], errors, dataPath + '/effect tree', nodeIdToDatapathMap);
 
-    return scripting.addUserActionTree(actionText, effectTree);
+    return createAddUserAction(actionText, effectTree, dataPath, nodeIdToDatapathMap);
 }

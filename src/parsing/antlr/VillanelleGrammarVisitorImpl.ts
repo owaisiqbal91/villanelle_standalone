@@ -63,8 +63,6 @@ export class VillanelleGrammarVisitorImpl extends VillanelleGrammarVisitor {
                     return () => exprResults[0]() != exprResults[2]();
                 }
                 case '==': {
-                    console.log(exprResults[0]());
-                    console.log(exprResults[2]());
                     return () => exprResults[0]() == exprResults[2]();
                 }
             }

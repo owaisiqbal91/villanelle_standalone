@@ -4,10 +4,15 @@ Initialization:
   - worship := true
   - farewell := false
   - bishop := false
+  - lisa := false
   - orz_npc := 'Orz the City Gate Barnacle'
-  - bishop_npc := 'Archnecrobishop Tir'
   - lisa_npc := 'Lissa Ratdaughter'
+  - lisa_introduced := false
+  - follow_lisa := false
+  - bishop_npc := 'Archnecrobishop Tir'
+  - bishop_introduced := false
   - current_npc := orz_npc
+  - going_to_npc := 'No one'
 
 Orz:
   condition: current_npc == orz_npc
@@ -38,40 +43,118 @@ Orz:
     - condition: askedAbout == 'farewell'
       effects:
         - current_npc := lisa_npc
+        - lisa := true
+        - askedAbout := 'nothing'
+      ticks: 0
+
+Lissa:
+  condition: current_npc == lisa_npc
+  selector:
+    - condition: askedAbout == 'trade'
+      selector:
+          - effect text: "Humans throw enough good stuff away in this city that I don't never need to work a day."
+            effects:
+              - ''
+            ticks: 0
+    - condition: askedAbout == 'worship'
+      effect text: "Rats don't worship any higher beings. Just feed off their leftovers."
+      effects:
+        - ''
+      ticks: 0
+    - condition: askedAbout == 'lisa'
+      effect text: "But I'm right here, boss."
+      effects:
+        - ''
+      ticks: 0
+    - condition: askedAbout == 'bishop'
+      selector:
+        - condition: bishop_introduced == false
+          effect text: "That crusty old fogey? You'll find him moping in his crumbling spire, poring over the cobwebbed leftovers of dead and exiled deities. Follow me."
+          effects:
+            - follow_lisa := true
+            - going_to_npc := bishop_npc
+          ticks: 0
+        - condition: bishop_introduced == true
+          effects:
+            - current_npc := bishop_npc
+          ticks: 0
+    - condition: askedAbout == 'farewell'
+      effect text: "You don't want to be wandering the rough 'n' tumble streets of a strange city all by your lonesome, boss."
+      effects:
+        - ''
+      ticks: 0
+
+Bishop:
+  condition: current_npc == bishop_npc
+  selector:
+    - condition: askedAbout == 'farewell'
+      effects:
+        - askedAbout := 'nothing'
+        - current_npc := lisa_npc
       ticks: 0
 
 User Interaction:
   - selector:
       - condition: current_npc == orz_npc
         description: "You there! Hooded stranger! Yes, I can talk. Expect us to waste good firegas raising this portcullis for you, eh? What's your business? [Trade] or [worship]?"
-      - condition: current_npc == lisa_npc
-        description: "Pssst! The rat queen sent me. She knows who you are. She knows what you want. And she's on your side.\nMe? I've been scraping a life on these streets all my life. Born, plopped straight out onto the cobbles and left to be raised by the rats. No pocket can't be picked by these fingers; no rumours what can escape these ears; no citizen this nose can't sniff out.\nYou say a name, I'll lead you right to 'em."
-  - sequence:
-      - condition: 'trade'
-        user action:
-          action text: "Trade"
-          effect tree:
-            effects:
-              - askedAbout := 'trade'
+      - condition: current_npc == lisa_npc and lisa_introduced == false
+        sequence:
+          - description: "Pssst! The rat queen sent me. She knows who you are. She knows what you want. And she's on your side.\nMe? I've been scraping a life on these streets all my life. Born, plopped straight out onto the cobbles and left to be raised by the rats. No pocket can't be picked by these fingers; no rumours what can escape these ears; no citizen this nose can't sniff out.\nYou say a name, I'll lead you right to 'em."
+          - effects:
+              - lisa_introduced := true
             ticks: 0
-      - condition: 'worship'
-        user action:
-          action text: "Worship"
-          effect tree:
-            effects:
-              - askedAbout := 'worship'
+      - condition: current_npc == lisa_npc and lisa_introduced == true
+        description: "Who are we going to see next, boss?"
+      - condition: current_npc == bishop_npc and bishop_introduced == false
+        sequence:
+          - description: "Oh, child! It is you! After all these years, you return to [Zendon] an adult.\nAnd not a moment too soon. This city suffers under the crushing rule of [Nodroth] and its [puppetguard]. The favoured classes have grown depraved and cruel. And the ordinary men and women must choose to either poison themselves slaving in the [stenchworks] or languish in the [underslums]."
+          - effects:
+              - bishop_introduced := true
             ticks: 0
-      - condition: 'bishop'
-        user action:
-          action text: "Archnecrobishop Tir"
-          effect tree:
-            effects:
-              - askedAbout := 'bishop'
-            ticks: 0
-      - condition: 'farewell'
-        user action:
-          action text: "Farewell"
-          effect tree:
-            effects:
-              - askedAbout := 'farewell'
-            ticks: 0
+      - condition: current_npc == bishop_npc and bishop_introduced == true
+        description: "It is good to see you, child. I hope your just works are proceeding apace."
+  - selector:
+    - condition: follow_lisa
+      user action:
+        action text: "Follow Lissa"
+        effect tree:
+          effects:
+            - follow_lisa := false
+            - current_npc := going_to_npc
+          ticks: 0
+    - sequence:
+        - condition: 'trade'
+          user action:
+            action text: "Trade"
+            effect tree:
+              effects:
+                - askedAbout := 'trade'
+              ticks: 0
+        - condition: 'worship'
+          user action:
+            action text: "Worship"
+            effect tree:
+              effects:
+                - askedAbout := 'worship'
+              ticks: 0
+        - condition: 'bishop'
+          user action:
+            action text: "Archnecrobishop Tir"
+            effect tree:
+              effects:
+                - askedAbout := 'bishop'
+              ticks: 0
+        - condition: 'farewell'
+          user action:
+            action text: "Farewell"
+            effect tree:
+              effects:
+                - askedAbout := 'farewell'
+              ticks: 0
+        - condition: 'lisa'
+          user action:
+            action text: "Lissa Ratdaughter"
+            effect tree:
+              effects:
+                - askedAbout := 'lisa'
+              ticks: 0

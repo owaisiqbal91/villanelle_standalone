@@ -1,12 +1,14 @@
 import { Button, ButtonGroup, Callout, Card, ControlGroup, Divider, NonIdealState, Text, H3, H6, H4 } from '@blueprintjs/core';
 import * as React from 'react';
-import { executeUserAction, worldTick, getNodeIdStatusMap, getVariable, getUserInteractionObject } from '../scripting';
+import { executeUserAction, worldTick, getNodeIdStatusMap, getVariable, getUserInteractionObject, getAllVariables } from '../scripting';
 
-export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, uio: any, handler: ({}) => void }, {}> {
+export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, uio: any, handler: ({ }) => void }, {}> {
 
     constructor(props) {
         super(props);
         this.actionTaken = this.actionTaken.bind(this);
+
+        this.props.handler(getNodeIdStatusMap());
 
         //This part is only to execute moves beforehand
         // this.doMove("Trade");
@@ -27,7 +29,10 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
             this.props.handler(getNodeIdStatusMap());
             this.setState({ uio: uio });
         }
-        console.log(getVariable("askedAbout"));
+        console.log("Asked about: " + getVariable("askedAbout"));
+        console.log("Current npc: " + getVariable("current_npc"));
+        console.log("All variables: ");
+        console.log(getAllVariables());
     }
 
     public doMove(actionText: string) {
@@ -49,7 +54,7 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
 
             var descriptionText = this.props.uio.text.split("\n").map(part => <div key={part}>{part}<br /></div>);
             var actionEffectsText = this.props.uio.actionEffectsText.split("\n").map(part => <div key={part}>{part}<br /></div>);
-            var textToDisplay = this.props.uio.actionEffectsText.length != 0 ?  actionEffectsText : descriptionText;
+            var textToDisplay = this.props.uio.actionEffectsText.length != 0 ? actionEffectsText : descriptionText;
 
             return (
                 <ControlGroup vertical={true} fill={true}>
@@ -70,6 +75,6 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
             );
         }
         return <NonIdealState icon="error" title="Compilation failed!"
-        description="You have one or more error(s) in your script."/>
+            description="You have one or more error(s) in your script." />
     }
 }

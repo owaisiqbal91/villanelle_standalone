@@ -1,13 +1,16 @@
 import { Card, Code, Elevation, H5, Icon, Intent, ITreeNode, Tag, Tooltip, Tree, IconName } from '@blueprintjs/core';
 import * as React from 'react';
-import { Status } from '../scripting';
+import { Status, clearNodeStatus } from '../scripting';
 
 export class VillanelleTreeVisualizer extends React.Component<{
     doc: {},
     errors: {},
     showDebugState: boolean,
     nodeIdToDatapathMap?: {},
-    nodeIdStatusMap?: {}
+    nodeIdStatusMap?: {},
+    rootNodeDatapaths?: string[],
+    dataPathToNodeStatusMap?: {},
+    dataPathToNodeIdMap?: {}
 }, {
     nodesExpanded: {}
 }> {
@@ -114,12 +117,13 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     conditionNode.hasCaret = true;
                 } else {
                     this.count++;
+                    let status = this.getStatusForNode(dataPath + '/condition');
                     conditionNode = {
                         id: this.count,
                         hasCaret: true,
-                        icon: "help",
+                        icon: this.createDebugIntentForIcon("help", status),
                         isExpanded: this.shouldNodeExpand(dataPath + '/condition') || this.shouldNodeExpand(dataPath),
-                        label: obj['condition'],
+                        label: this.createDebugIntentForLabel(obj['condition'], status),
                         childNodes: [],
                         nodeData: { text: obj['condition'], dataPath: dataPath + '/condition' }
                     };
@@ -131,7 +135,7 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/sequence'].message, 'sequence');
                 } else {
                     this.count++;
-                    status = this.getStatusForNode(dataPath + '/selector');
+                    status = this.getStatusForNode(dataPath + '/sequence');
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
@@ -161,10 +165,10 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     nodeToBuild.childNodes = this.getArrayNode(obj['selector'], errors, dataPath + "/selector");
                 }
             } else if (obj['effects'] !== undefined) {
-                nodeToBuild = this.getEffectsNodes(obj['effects'], errors, dataPath + "/effects");
+                status = this.getStatusForNode(dataPath);
+                nodeToBuild = this.getEffectsNodes(obj['effects'], errors, dataPath + "/effects", status);
                 if (conditionNode === undefined) {
                     this.count++;
-                    status = this.getStatusForNode(dataPath + '/effects');
                     conditionNode = {
                         id: this.count,
                         hasCaret: true,
@@ -176,6 +180,9 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     };
                 }
 
+                conditionNode.icon = this.createDebugIntentForIcon(conditionNode.icon, status);
+                conditionNode.label = this.createDebugIntentForLabel(conditionNode.label, status);
+
                 if (obj['effect text'] !== undefined) {
                     if (errors[dataPath + '/effect text']) {
                         nodeToBuild.push(this.getErrorTreeNode(errors[dataPath + '/effect text'].message, obj['effect text'] + ''));
@@ -184,8 +191,8 @@ export class VillanelleTreeVisualizer extends React.Component<{
                         nodeToBuild.push({
                             id: this.count,
                             hasCaret: false,
-                            icon: "comment",
-                            label: <Tooltip content="effect text"><i>{'"' + obj['effect text'] + '"'}</i></Tooltip>,
+                            icon: this.createDebugIntentForIcon("comment", status),
+                            label: this.createDebugIntentForLabel(<Tooltip content="effect text"><i>{'"' + obj['effect text'] + '"'}</i></Tooltip>, status),
                             nodeData: { text: <i>{obj['effect text']}</i>, dataPath: dataPath + '/effect text' }
                         });
                     }
@@ -211,11 +218,12 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/description'], obj['description']);
                 } else {
                     this.count++;
+                    let status = this.getStatusForNode(dataPath + '/description');
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: false,
-                        icon: "paragraph",
-                        label: <Tooltip content="description"><i>{'"' + obj['description'] + '"'}</i></Tooltip>,
+                        icon: this.createDebugIntentForIcon("paragraph", status),
+                        label: this.createDebugIntentForLabel(<Tooltip content="description"><i>{'"' + obj['description'] + '"'}</i></Tooltip>, status),
                         nodeData: { text: <i>{obj['description']}</i>, dataPath: dataPath + '/description' }
                     };
                 }
@@ -224,11 +232,12 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     nodeToBuild = this.getErrorTreeNode(errors[dataPath + '/user action'].message, 'user action');
                 } else {
                     this.count++;
+                    let status = this.getStatusForNode(dataPath + '/user action');
                     nodeToBuild = {
                         id: this.count,
                         hasCaret: true,
-                        icon: "select",
-                        label: "user action",
+                        icon: this.createDebugIntentForIcon("select", status),
+                        label: this.createDebugIntentForLabel("user action", status),
                         childNodes: [],
                         isExpanded: this.shouldNodeExpand(dataPath + '/user action'),
                         nodeData: { text: "user action", dataPath: dataPath + '/user action' }
@@ -241,9 +250,9 @@ export class VillanelleTreeVisualizer extends React.Component<{
                             nodeToBuild.childNodes.push({
                                 id: this.count,
                                 hasCaret: false,
-                                icon: "font",
+                                icon: this.createDebugIntentForIcon("font", status),
                                 isExpanded: this.shouldNodeExpand(dataPath + '/user action/action text'),
-                                label: <b>{'"' + obj['user action']['action text'] + '"'}</b>,
+                                label: this.createDebugIntentForLabel(<b>{'"' + obj['user action']['action text'] + '"'}</b>, status),
                                 nodeData: { text: <b>{obj['user action']['action text']}</b>, dataPath: dataPath + '/user action/action text' }
                             })
                         }
@@ -306,7 +315,7 @@ export class VillanelleTreeVisualizer extends React.Component<{
         }).filter(obj => obj !== undefined);
     }
 
-    getEffectsNodes(effects: string[], errors, dataPath) {
+    getEffectsNodes(effects: string[], errors, dataPath, status?: Status) {
         return effects.map((effect, index) => {
             if (errors[dataPath + '/' + index]) {
                 return this.getErrorTreeNode(errors[dataPath + '/' + index].message, effect + "");
@@ -315,8 +324,8 @@ export class VillanelleTreeVisualizer extends React.Component<{
                 return {
                     id: this.count,
                     hasCaret: false,
-                    label: <Code>{effect}</Code>,
-                    icon: "code",
+                    label: this.createDebugIntentForLabel(<Code>{effect}</Code>, status),
+                    icon: this.createDebugIntentForIcon("code", status),
                     nodeData: { text: <Code>{effect}</Code>, dataPath: dataPath + '/' + index }
                 }
             }
@@ -364,8 +373,8 @@ export class VillanelleTreeVisualizer extends React.Component<{
     }
 
     private getStatusForNode(dataPath: string) {
-        let nodeStatus: Status = this.dataPathToNodeStatusMap[dataPath];
         if (this.props.showDebugState) {
+            let nodeStatus: Status = this.props.dataPathToNodeStatusMap[dataPath];
             return nodeStatus;
         }
     }
@@ -410,17 +419,9 @@ export class VillanelleTreeVisualizer extends React.Component<{
         this.setState({ nodesExpanded: nodesExpanded });
     };
 
-    dataPathToNodeStatusMap = {};
     render() {
-        //TODO temporary, remove later
-        if (this.props.showDebugState) {
-            Object.keys(this.props.nodeIdToDatapathMap).forEach(key => {
-                this.dataPathToNodeStatusMap[this.props.nodeIdToDatapathMap[key]] = this.props.nodeIdStatusMap[key];
-            });
-            // console.log(this.dataPathToNodeStatusMap);
-            // console.log(this.props.nodeIdStatusMap);
-            // console.log(this.props.nodeIdToDatapathMap);
-        }
+        //console.log(this.props.dataPathToNodeStatusMap);
+        //console.log(this.props.nodeIdToDatapathMap);
 
         this.errorDatapaths = Object.keys(this.props.errors);
         var nodes = this.getNodeTree(this.props.doc, this.props.errors);
@@ -440,6 +441,7 @@ export class VillanelleTreeVisualizer extends React.Component<{
                     onNodeExpand={this.handleNodeExpand}>
                 </Tree></div>
         }
+
         return <Card elevation={Elevation.ZERO} interactive={true}>
             {tree}
         </Card>

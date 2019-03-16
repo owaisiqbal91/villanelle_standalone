@@ -29,6 +29,10 @@ export type CompositeTick = (astTicks: Tick[]) => Tick;
 var blackboard = {};
 var nodeStatusMap = {};
 
+export function clearNodeStatus(id: number) {
+    delete nodeStatusMap[id]
+}
+
 function getActionTick(id: number): ActionTick {
     return (precondition, effect, ticksRequired = 1) => {
         return () => {
@@ -54,11 +58,13 @@ function getActionTick(id: number): ActionTick {
     }
 }
 
-function getGuardTick(): GuardTick {
+function getGuardTick(id: number): GuardTick {
     return (precondition, astTick, negate = false) => {
         return () => {
             let proceed = negate ? !precondition() : precondition();
-            return proceed ? execute(astTick) : Status.FAILURE;
+            let status = proceed ? execute(astTick) : Status.FAILURE;
+            nodeStatusMap[id] = status;
+            return status;
         }
     }
 }
@@ -124,11 +130,11 @@ export function action(precondition: Precondition, effect: Effect, ticksRequired
 }
 
 export function guard(precondition: Precondition, astTick: Tick): Tick {
-    return getGuardTick()(precondition, astTick);
+    return getGuardTick(++globalIdCounter)(precondition, astTick);
 }
 
 export function neg_guard(precondition: Precondition, astTick: Tick): Tick {
-    return getGuardTick()(precondition, astTick, true);
+    return getGuardTick(++globalIdCounter)(precondition, astTick, true);
 }
 
 /**
@@ -382,11 +388,14 @@ export function setAgentVariable(agent: string, varName: string, value: any) {
 
 export function getVariable(varName: string): any {
     if (isUndefined(variables[varName])) {
-        console.trace();
         console.log("Variable " + varName + " not set!");
         return;
     }
     return variables[varName];
+}
+
+export function getAllVariables() {
+    return variables;
 }
 
 export function getAgentVariable(agent: string, varName: string) {
@@ -489,6 +498,7 @@ export function executeUserAction(text: string) {
 
 //4.
 export function initialize() {
+    console.log(variables);
     runUserInteractionTrees();
 }
 

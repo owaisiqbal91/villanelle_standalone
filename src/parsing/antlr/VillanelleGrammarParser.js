@@ -32,14 +32,14 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0002\u001b\u001f\u0003\u0002\u0002\u0002\u001c\u001f\u0005\u0006\u0004",
     "\u0002\u001d\u001f\u0007\u0013\u0002\u0002\u001e\u0019\u0003\u0002\u0002",
     "\u0002\u001e\u001c\u0003\u0002\u0002\u0002\u001e\u001d\u0003\u0002\u0002",
-    "\u0002\u001f\u0005\u0003\u0002\u0002\u0002 !\u0007\u0011\u0002\u0002",
+    "\u0002\u001f\u0005\u0003\u0002\u0002\u0002 !\u0007\u0012\u0002\u0002",
     "!\"\u0007\u0003\u0002\u0002\"#\u0005\u0010\t\u0002#$\u0007\u0013\u0002",
     "\u0002$\u0007\u0003\u0002\u0002\u0002%&\u0007\u0010\u0002\u0002&\t\u0003",
-    "\u0002\u0002\u0002\'(\u0007\u0012\u0002\u0002(\u000b\u0003\u0002\u0002",
+    "\u0002\u0002\u0002\'(\u0007\u0011\u0002\u0002(\u000b\u0003\u0002\u0002",
     "\u0002)-\u0007\u0004\u0002\u0002*,\u000b\u0002\u0002\u0002+*\u0003\u0002",
     "\u0002\u0002,/\u0003\u0002\u0002\u0002-.\u0003\u0002\u0002\u0002-+\u0003",
     "\u0002\u0002\u0002.0\u0003\u0002\u0002\u0002/-\u0003\u0002\u0002\u0002",
-    "01\u0007\u0004\u0002\u00021\r\u0003\u0002\u0002\u000223\u0007\u0011",
+    "01\u0007\u0004\u0002\u00021\r\u0003\u0002\u0002\u000223\u0007\u0012",
     "\u0002\u00023\u000f\u0003\u0002\u0002\u000245\b\t\u0001\u00025=\u0005",
     "\u0012\n\u000267\u0007\r\u0002\u00027=\u0005\u0010\t\u00078=\u0005\n",
     "\u0006\u00029=\u0005\b\u0005\u0002:=\u0005\f\u0007\u0002;=\u0005\u000e",
@@ -70,7 +70,7 @@ var literalNames = [ null, "':='", "'''", "'<'", "'>'", "'=='", "'>='",
                      "'-'" ];
 
 var symbolicNames = [ null, null, null, null, null, null, null, null, null, 
-                      null, null, null, null, null, "BOOL", "ID", "INT", 
+                      null, null, null, null, null, "BOOL", "INT", "ID", 
                       "NEWLINE", "WS", "MUL", "DIV", "ADD", "SUB" ];
 
 var ruleNames =  [ "prog", "stat", "assign", "bool", "integer", "string", 
@@ -109,8 +109,8 @@ VillanelleGrammarParser.T__10 = 11;
 VillanelleGrammarParser.T__11 = 12;
 VillanelleGrammarParser.T__12 = 13;
 VillanelleGrammarParser.BOOL = 14;
-VillanelleGrammarParser.ID = 15;
-VillanelleGrammarParser.INT = 16;
+VillanelleGrammarParser.INT = 15;
+VillanelleGrammarParser.ID = 16;
 VillanelleGrammarParser.NEWLINE = 17;
 VillanelleGrammarParser.WS = 18;
 VillanelleGrammarParser.MUL = 19;
@@ -196,7 +196,7 @@ VillanelleGrammarParser.prototype.prog = function() {
             this.state = 21; 
             this._errHandler.sync(this);
             _la = this._input.LA(1);
-        } while((((_la) & ~0x1f) == 0 && ((1 << _la) & ((1 << VillanelleGrammarParser.T__1) | (1 << VillanelleGrammarParser.T__10) | (1 << VillanelleGrammarParser.T__11) | (1 << VillanelleGrammarParser.BOOL) | (1 << VillanelleGrammarParser.ID) | (1 << VillanelleGrammarParser.INT) | (1 << VillanelleGrammarParser.NEWLINE))) !== 0));
+        } while((((_la) & ~0x1f) == 0 && ((1 << _la) & ((1 << VillanelleGrammarParser.T__1) | (1 << VillanelleGrammarParser.T__10) | (1 << VillanelleGrammarParser.T__11) | (1 << VillanelleGrammarParser.BOOL) | (1 << VillanelleGrammarParser.INT) | (1 << VillanelleGrammarParser.ID) | (1 << VillanelleGrammarParser.NEWLINE))) !== 0));
     } catch (re) {
     	if(re instanceof antlr4.error.RecognitionException) {
 	        localctx.exception = re;

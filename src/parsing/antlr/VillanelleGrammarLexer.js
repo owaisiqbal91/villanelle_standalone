@@ -33,8 +33,8 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u001f\u0002!\u0002#\u0002%\u0002\'\u0002)\u0002+\u0002-\u0010/\u0011",
     "1\u00123\u00135\u00147\u00159\u0016;\u0017=\u0018\u0003\u0002\r\u0004",
     "\u0002VVvv\u0004\u0002HHhh\u0004\u0002TTtt\u0004\u0002WWww\u0004\u0002",
-    "GGgg\u0004\u0002CCcc\u0004\u0002NNnn\u0004\u0002UUuu\u0006\u00022;C",
-    "\\aac|\u0003\u00022;\u0004\u0002\u000b\u000b\"\"\u0002\u009a\u0002\u0003",
+    "GGgg\u0004\u0002CCcc\u0004\u0002NNnn\u0004\u0002UUuu\u0003\u00022;\u0006",
+    "\u00022;C\\aac|\u0004\u0002\u000b\u000b\"\"\u0002\u009a\u0002\u0003",
     "\u0003\u0002\u0002\u0002\u0002\u0005\u0003\u0002\u0002\u0002\u0002\u0007",
     "\u0003\u0002\u0002\u0002\u0002\t\u0003\u0002\u0002\u0002\u0002\u000b",
     "\u0003\u0002\u0002\u0002\u0002\r\u0003\u0002\u0002\u0002\u0002\u000f",
@@ -135,8 +135,8 @@ VillanelleGrammarLexer.T__10 = 11;
 VillanelleGrammarLexer.T__11 = 12;
 VillanelleGrammarLexer.T__12 = 13;
 VillanelleGrammarLexer.BOOL = 14;
-VillanelleGrammarLexer.ID = 15;
-VillanelleGrammarLexer.INT = 16;
+VillanelleGrammarLexer.INT = 15;
+VillanelleGrammarLexer.ID = 16;
 VillanelleGrammarLexer.NEWLINE = 17;
 VillanelleGrammarLexer.WS = 18;
 VillanelleGrammarLexer.MUL = 19;
@@ -159,8 +159,8 @@ VillanelleGrammarLexer.prototype.literalNames = [ null, "':='", "'''", "'<'",
 VillanelleGrammarLexer.prototype.symbolicNames = [ null, null, null, null, 
                                                    null, null, null, null, 
                                                    null, null, null, null, 
-                                                   null, null, "BOOL", "ID", 
-                                                   "INT", "NEWLINE", "WS", 
+                                                   null, null, "BOOL", "INT", 
+                                                   "ID", "NEWLINE", "WS", 
                                                    "MUL", "DIV", "ADD", 
                                                    "SUB" ];
 
@@ -169,7 +169,7 @@ VillanelleGrammarLexer.prototype.ruleNames = [ "T__0", "T__1", "T__2", "T__3",
                                                "T__8", "T__9", "T__10", 
                                                "T__11", "T__12", "T", "F", 
                                                "R", "U", "E", "A", "L", 
-                                               "S", "BOOL", "ID", "INT", 
+                                               "S", "BOOL", "INT", "ID", 
                                                "NEWLINE", "WS", "MUL", "DIV", 
                                                "ADD", "SUB" ];
 

@@ -12,10 +12,18 @@ import { VillanelleTreeVisualizer } from './villanelle_tree_visualizer';
 
 var electron = require('electron');
 
-export class App extends React.Component<{}, { currentTab: string, code: string, errors: {}, doc: {}, nodeIdToDatapathMap: {}, nodeIdStatusMap: {}}> {
+export class App extends React.Component<{}, {
+  currentTab: string,
+  code: string,
+  errors: {},
+  doc: {},
+  nodeIdToDatapathMap: {},
+  nodeIdStatusMap: {},
+  rootNodeDatapaths: string[]
+}> {
   constructor(props) {
     super(props);
-    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/weird_city_interloper.yml"), 'utf8');
+    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test.yml"), 'utf8');
     var initializedObject = this.initializeGame(yamlString);
     this.state = {
       currentTab: 'Play',
@@ -23,7 +31,8 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
       errors: this.getErrorsByDataPath(initializedObject.errors),
       doc: initializedObject.doc,
       nodeIdToDatapathMap: initializedObject.nodeIdToDatapathMap,
-      nodeIdStatusMap: initializedObject.nodeIdStatusMap
+      nodeIdStatusMap: initializedObject.nodeIdStatusMap,
+      rootNodeDatapaths: initializedObject.rootNodeDatapaths
     };
 
     this.setCurrentTab = this.setCurrentTab.bind(this);
@@ -42,14 +51,37 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
       errors: this.getErrorsByDataPath(initializedObject.errors),
       doc: initializedObject.doc,
       nodeIdToDatapathMap: initializedObject.nodeIdToDatapathMap,
-      nodeIdStatusMap: initializedObject.nodeIdStatusMap
+      nodeIdStatusMap: initializedObject.nodeIdStatusMap,
+      rootNodeDatapaths: initializedObject.rootNodeDatapaths
     });
   }
 
+  dataPathToNodeStatusMap = {}
+  dataPathToNodeIdMap = {}
   public setNodeIdStatusMap(nodeIdStatusMap) {
+    console.log("node id status map being set");
+    console.log(nodeIdStatusMap);
+    console.trace();
     this.setState({
       nodeIdStatusMap: nodeIdStatusMap
     });
+    Object.keys(this.state.nodeIdToDatapathMap).forEach(key => {
+      this.dataPathToNodeStatusMap[this.state.nodeIdToDatapathMap[key]] = nodeIdStatusMap[key];
+      this.dataPathToNodeIdMap[this.state.nodeIdToDatapathMap[key]] = key;
+    });
+
+    //reset statuses
+    this.state.rootNodeDatapaths.forEach(rootNodeDatapath => {
+      let status: scripting.Status = this.dataPathToNodeStatusMap[rootNodeDatapath];
+      if (status == scripting.Status.SUCCESS || status == scripting.Status.FAILURE) {
+        //clear node status for child nodes
+        Object.keys(this.dataPathToNodeIdMap).forEach(dataPath => {
+          if (dataPath.startsWith(rootNodeDatapath)) {
+            scripting.clearNodeStatus(this.dataPathToNodeIdMap[dataPath]);
+          }
+        })
+      }
+    })
   }
 
   initializeGame(yamlString) {
@@ -63,7 +95,13 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
     if (errors.length == 0) {
       scripting.initialize();
     }
-    return { doc: doc, errors: errors, nodeIdToDatapathMap: nodeIdToDatapathMap, nodeIdStatusMap: nodeIdStatusMap };
+    return {
+      doc: doc,
+      errors: errors,
+      nodeIdToDatapathMap: nodeIdToDatapathMap,
+      nodeIdStatusMap: nodeIdStatusMap,
+      rootNodeDatapaths: parsedObject.rootNodeDatapaths
+    };
   }
 
   getCallout() {
@@ -111,15 +149,18 @@ export class App extends React.Component<{}, { currentTab: string, code: string,
       let uio = scripting.getUserInteractionObject();
       let hasErrors = Object.keys(this.state.errors).length != 0;
       if (hasErrors) {
-        mainPage = <VillanellePlayArea hasErrors={true} uio={uio} handler={this.setNodeIdStatusMap}/>;
+        mainPage = <VillanellePlayArea hasErrors={true} uio={uio} handler={this.setNodeIdStatusMap} />;
       } else {
-        let playAreaPanel = <VillanellePlayArea hasErrors={false} uio={uio} handler={this.setNodeIdStatusMap}/>;
+        let playAreaPanel = <VillanellePlayArea hasErrors={false} uio={uio} handler={this.setNodeIdStatusMap} />;
         let treeVisualizerPanel = <VillanelleTreeVisualizer
           doc={this.state.doc}
           errors={this.state.errors}
           showDebugState={true}
           nodeIdToDatapathMap={this.state.nodeIdToDatapathMap}
-          nodeIdStatusMap={this.state.nodeIdStatusMap} />
+          nodeIdStatusMap={this.state.nodeIdStatusMap}
+          rootNodeDatapaths={this.state.rootNodeDatapaths}
+          dataPathToNodeStatusMap={this.dataPathToNodeStatusMap}
+          dataPathToNodeIdMap={this.dataPathToNodeIdMap} />
 
         mainPage = this.getSplitPane(windowWidth, windowHeight, playAreaPanel, treeVisualizerPanel);
       }
