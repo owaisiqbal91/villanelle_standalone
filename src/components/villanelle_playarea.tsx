@@ -11,13 +11,15 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
         this.props.handler(getNodeIdStatusMap());
 
         //This part is only to execute moves beforehand
-        // this.doMove("Trade");
-        // this.doMove("Worship");
+        this.doMove("Trade");
+        this.doMove("Farewell");
+        this.doMove("Archnecrobishop Tir");
+        this.doMove("Follow Lissa");
 
-        // let uio = getUserInteractionObject();
-        // this.state = {
-        //     uio: uio
-        // }
+        let uio = getUserInteractionObject();
+        this.state = {
+            uio: uio
+        }
         //remove after done
     }
 

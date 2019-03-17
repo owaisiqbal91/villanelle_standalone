@@ -23,7 +23,7 @@ export class App extends React.Component<{}, {
 }> {
   constructor(props) {
     super(props);
-    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/test.yml"), 'utf8');
+    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/weird_city_interloper.yml"), 'utf8');
     var initializedObject = this.initializeGame(yamlString);
     this.state = {
       currentTab: 'Play',

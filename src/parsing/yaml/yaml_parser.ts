@@ -130,7 +130,7 @@ let schema = {
         },
         actionNode: {
             type: "object",
-            required: ["effects", "ticks"],
+            required: ["effects"],
             properties: {
                 "effects": {
                     type: "array",
@@ -145,7 +145,7 @@ let schema = {
             additionalProperties: false,
             errorMessage: {
                 properties: {
-                    "ticks": 'ticks is required and should be a non-negative number',
+                    "ticks": 'ticks should be a non-negative number',
                     "effect text": 'effect text must be a string',
                     "condition": 'condition must be an expression string',
                     "effects": 'effects should be a list of expressions'
@@ -269,13 +269,15 @@ function visitObject(obj: {}, errors: any[], dataPath: string, nodeIdToDatapathM
         if (condition) {
             //action
             if (effects) {
-                return createAction(conditionLambda, effectsLambda, obj['ticks'], dataPath, nodeIdToDatapathMap);
+                let ticks = obj['tick'] ? obj['tick'] : 0;
+                return createAction(conditionLambda, effectsLambda, ticks, dataPath, nodeIdToDatapathMap);
             } else {//guard
                 //return scripting.guard(conditionLambda, sequenceOrSelectorTick);
                 return createGuard(conditionLambda, sequenceOrSelectorTick, dataPath + '/condition', nodeIdToDatapathMap);
             }
         } else if (effects) { //action without condition
-            return createAction(() => true, effectsLambda, obj['ticks'], dataPath, nodeIdToDatapathMap);
+            let ticks = obj['tick'] ? obj['tick'] : 0;
+            return createAction(() => true, effectsLambda, ticks, dataPath, nodeIdToDatapathMap);
         } else {
             return sequenceOrSelectorTick;
         }
