@@ -166,7 +166,8 @@ export class VillanelleTreeVisualizer extends React.Component<{
                 }
             } else if (obj['effects'] !== undefined) {
                 status = this.getStatusForNode(dataPath);
-                nodeToBuild = this.getEffectsNodes(obj['effects'], errors, dataPath + "/effects", status);
+                if (obj['effects'] != null)
+                    nodeToBuild = this.getEffectsNodes(obj['effects'], errors, dataPath + "/effects", status);
                 if (conditionNode === undefined) {
                     this.count++;
                     conditionNode = {

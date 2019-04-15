@@ -8,7 +8,16 @@ require('brace/ext/searchbox');
 var ace = require("brace");
 var langTools = ace.acequire("ace/ext/language_tools");
 
-export class VillanelleAceEditor extends React.Component<{ code: string, handler: (string) => void, height: number }> {
+import { ipcRenderer } from 'electron';
+
+export class VillanelleAceEditor extends React.Component<{
+    code: string,
+    handler: (string) => void,
+    height: number,
+    saveHandler: () => void,
+    saveAsHandler: () => void,
+    openHandler: () => void
+}> {
 
     constructor(props) {
         super(props);
@@ -47,6 +56,39 @@ export class VillanelleAceEditor extends React.Component<{ code: string, handler
             value={this.props.code}
             editorProps={{ $blockScrolling: Infinity }}
             enableLiveAutocompletion={true}
+
+            commands={[
+                {
+                    name: 'closeCommand',
+                    bindKey: { win: 'Ctrl-w', mac: 'Command-w' },
+                    exec: () => { ipcRenderer.send('closed') }
+                },
+                {
+                    name: 'devToolsCommand',
+                    bindKey: { win: 'Ctrl-i', mac: 'Command-i' },
+                    exec: () => { ipcRenderer.send('toggleDevTools') }
+                },
+                {
+                    name: 'devToolsCommand2',
+                    bindKey: { win: 'Ctrl-Shift-i', mac: 'Command-Shift-i' },
+                    exec: () => { ipcRenderer.send('toggleDevTools') }
+                },
+                {
+                    name: 'saveCommand',
+                    bindKey: { win: 'Ctrl-s', mac: 'Command-s' },
+                    exec: () => { this.props.saveHandler() }
+                },
+                {
+                    name: 'saveAsCommand',
+                    bindKey: { win: 'Ctrl-Shift-s', mac: 'Command-Shift-s' },
+                    exec: () => { this.props.saveAsHandler() }
+                },
+                {
+                    name: 'openCommand',
+                    bindKey: { win: 'Ctrl-o', mac: 'Command-o' },
+                    exec: () => { this.props.openHandler() }
+                }
+            ]}
         />
     }
 

@@ -9,8 +9,14 @@ import { VillanelleAceEditor } from './villanelle_ace_editor';
 import { VillanelleNavbar } from './villanelle_navbar';
 import { VillanellePlayArea } from './villanelle_playarea';
 import { VillanelleTreeVisualizer } from './villanelle_tree_visualizer';
+import { ipcRenderer } from 'electron';
 
 var electron = require('electron');
+
+var remote = require('electron').remote;
+var dialog = remote.dialog;
+
+var Mousetrap = require('mousetrap');
 
 export class App extends React.Component<{}, {
   currentTab: string,
@@ -19,7 +25,10 @@ export class App extends React.Component<{}, {
   doc: {},
   nodeIdToDatapathMap: {},
   nodeIdStatusMap: {},
-  rootNodeDatapaths: string[]
+  rootNodeDatapaths: string[],
+  currentFile: string
+  fileOpened: boolean,
+  unsaved: boolean
 }> {
   constructor(props) {
     super(props);
@@ -32,12 +41,31 @@ export class App extends React.Component<{}, {
       doc: initializedObject.doc,
       nodeIdToDatapathMap: initializedObject.nodeIdToDatapathMap,
       nodeIdStatusMap: initializedObject.nodeIdStatusMap,
-      rootNodeDatapaths: initializedObject.rootNodeDatapaths
+      rootNodeDatapaths: initializedObject.rootNodeDatapaths,
+      currentFile: "[New file]",
+      fileOpened: false,
+      unsaved: false
     };
 
     this.setCurrentTab = this.setCurrentTab.bind(this);
     this.setCode = this.setCode.bind(this);
     this.setNodeIdStatusMap = this.setNodeIdStatusMap.bind(this);
+    this.saveFile = this.saveFile.bind(this);
+    this.saveAsFile = this.saveAsFile.bind(this);
+    this.openFile = this.openFile.bind(this);
+
+    // Mousetrap.bind(['command+r', 'ctrl+r', 'f5'], function () {
+    //   ipcRenderer.send('reload')
+    // })
+    Mousetrap.bind(['command+i', 'ctrl+i', 'command+shift+i', 'ctrl+shift+i'], function () {
+      ipcRenderer.send('toggleDevTools')
+    })
+    Mousetrap.bind(['command+w', 'ctrl+w'], function () {
+      ipcRenderer.send('closed')
+    })
+    Mousetrap.bind(['command+s', 'ctrl+s'], this.saveFile)
+    Mousetrap.bind(['command+shift+s', 'ctrl+shift+s'], this.saveAsFile)
+    Mousetrap.bind(['command+o', 'ctrl+o'], this.openFile)
   }
 
   public setCurrentTab(currentTab) {
@@ -52,16 +80,73 @@ export class App extends React.Component<{}, {
       doc: initializedObject.doc,
       nodeIdToDatapathMap: initializedObject.nodeIdToDatapathMap,
       nodeIdStatusMap: initializedObject.nodeIdStatusMap,
-      rootNodeDatapaths: initializedObject.rootNodeDatapaths
+      rootNodeDatapaths: initializedObject.rootNodeDatapaths,
+      unsaved: true
     });
+  }
+
+  public saveFile() {
+    if (!this.state.fileOpened) {
+      return this.saveAsFile();
+    }
+
+    fs.writeFile(this.state.currentFile, this.state.code, (err) => {
+      if (err) {
+        alert(err);
+        console.log(err);
+        return;
+      }
+      this.setState({ unsaved: false });
+    })
+  }
+
+  public saveAsFile() {
+    dialog.showSaveDialog(null, {}, (filepath) => {
+      if (filepath === undefined) {
+        alert("You didn't save the file");
+        return;
+      }
+
+      if (!filepath.endsWith(".yml")) {
+        filepath += ".yml"
+      }
+
+      fs.writeFile(filepath, this.state.code, (err) => {
+        if (err) {
+          alert(err);
+          console.log(err);
+          return;
+        }
+        alert("Saved successfully!");
+        this.setState({ currentFile: path.basename(filepath), fileOpened: true, unsaved: false });
+      })
+    })
+  }
+
+  public openFile() {
+    dialog.showOpenDialog(null, {
+      filters: [{ name: 'YAML files', extensions: ['yml'] }]
+    }, (filePaths) => {
+      if (filePaths === undefined || filePaths.length == 0) {
+        return;
+      }
+      var filePath = filePaths[0];
+      fs.readFile(filePath, 'utf-8', (err, data) => {
+        if (err) {
+          alert(err);
+          console.log(err);
+          return;
+        }
+
+        this.setCode(data);
+        this.setState({ currentFile: path.basename(filePath), fileOpened: true, unsaved: false });
+      });
+    })
   }
 
   dataPathToNodeStatusMap = {}
   dataPathToNodeIdMap = {}
   public setNodeIdStatusMap(nodeIdStatusMap) {
-    console.log("node id status map being set");
-    console.log(nodeIdStatusMap);
-    console.trace();
     this.setState({
       nodeIdStatusMap: nodeIdStatusMap
     });
@@ -134,7 +219,14 @@ export class App extends React.Component<{}, {
       let compilationResult = this.getCallout();
 
       let aceEditorPanel = <div>
-        <VillanelleAceEditor handler={this.setCode} code={this.state.code} height={windowHeight - 200} />
+        <VillanelleAceEditor
+          handler={this.setCode}
+          code={this.state.code}
+          height={windowHeight - 200}
+          saveHandler={this.saveFile}
+          saveAsHandler={this.saveAsFile}
+          openHandler={this.openFile}
+        />
         {compilationResult}
       </div>;
       let treeVisualizerPanel = <VillanelleTreeVisualizer
@@ -168,7 +260,15 @@ export class App extends React.Component<{}, {
 
     return (
       <div>
-        <VillanelleNavbar handler={this.setCurrentTab} currentTab={this.state.currentTab} fixToTop={this.state.currentTab === 'Script'} />
+        <VillanelleNavbar
+          handler={this.setCurrentTab}
+          currentTab={this.state.currentTab}
+          fixToTop={this.state.currentTab === 'Script'}
+          saveHandler={this.saveFile}
+          saveAsHandler={this.saveAsFile}
+          openHandler={this.openFile}
+          currentFile={this.state.currentFile}
+          unsaved={this.state.unsaved} />
         {mainPage}
       </div>
     );

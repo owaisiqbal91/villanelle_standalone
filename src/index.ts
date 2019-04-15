@@ -25,8 +25,6 @@ const createWindow = async () => {
 
   mainWindow.maximize();
 
-  console.log(screen.getPrimaryDisplay().size);
-
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
@@ -45,32 +43,45 @@ const createWindow = async () => {
   }
 
   //Dev global shortcuts
-  globalShortcut.register('f5', function () {
-    if (mainWindow != null) {
-      mainWindow.reload();
-    }
-  });
+  // globalShortcut.register('f5', function () {
+  //   if (mainWindow != null) {
+  //     mainWindow.reload();
+  //   }
+  // });
 
-  globalShortcut.register('CommandOrControl+R', function () {
-    if (mainWindow != null) {
-      mainWindow.reload();
-    }
-  });
+  // globalShortcut.register('CommandOrControl+R', function () {
+  //   if (mainWindow != null) {
+  //     mainWindow.reload();
+  //   }
+  // });
 
-  globalShortcut.register('CommandOrControl+I', function () {
-    if (mainWindow != null) {
-      mainWindow.webContents.toggleDevTools();
-    }
-  });
+  // globalShortcut.register('CommandOrControl+I', function () {
+  //   if (mainWindow != null) {
+  //     mainWindow.webContents.toggleDevTools();
+  //   }
+  // });
 
   //globalShortcut.register('CommandOrControl+W', close);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', close);
+
 };
 
 //Catch Quit callback
 ipcMain.on('closed', close);
+ipcMain.on('toggleDevTools', toggleDevTools);
+ipcMain.on('reload', reload);
+
+function toggleDevTools() {
+  if (mainWindow !== null)
+    mainWindow.webContents.toggleDevTools();
+}
+
+function reload() {
+  if (mainWindow !== null)
+    mainWindow.reload();
+}
 
 // Dereference the window object, usually you would store windows
 // in an array if your app supports multi windows, this is the time

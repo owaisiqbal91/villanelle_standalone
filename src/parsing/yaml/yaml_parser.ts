@@ -187,7 +187,8 @@ export function parse(yamlString: string) {
                 let agent = scripting.addAgent(key);
                 var tree = visitObject(doc[key], errors, "/" + key, nodeIdToDatapathMap);
                 scripting.attachTreeToAgent(agent, tree);
-                rootNodeDatapaths.push("/" + key + '/' + getRootNodeKey(doc[key]));
+                if (doc[key] != null)
+                    rootNodeDatapaths.push("/" + key + '/' + getRootNodeKey(doc[key]));
             }
         }
 
@@ -202,7 +203,8 @@ export function parse(yamlString: string) {
             if (Array.isArray(userInteractionArr)) {
                 userInteractionArr.forEach((interactionObj, index) => scripting.addUserInteractionTree(visitObject(interactionObj, errors, '/User Interaction/' + index, nodeIdToDatapathMap)));
                 userInteractionArr.forEach((interactionObj, index) => {
-                    rootNodeDatapaths.push('/User Interaction/' + index + '/' + getRootNodeKey(interactionObj));
+                    if (interactionObj != null)
+                        rootNodeDatapaths.push('/User Interaction/' + index + '/' + getRootNodeKey(interactionObj));
                 });
             }
         }
@@ -328,7 +330,7 @@ function visitArray(arr: [], errors: any[], dataPath: string, nodeIdToDatapathMa
 }
 
 function visitEffects(arr: [], errors: any[], dataPath: string, nodeIdToDatapathMap: {}) {
-    if (arr !== null) {
+    if (arr !== null && Array.isArray(arr)) {
         let statements = arr.join('\n');
         if (statements === '') {
             return [];
