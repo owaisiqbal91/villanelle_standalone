@@ -31,8 +31,6 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
             this.props.handler(getNodeIdStatusMap());
             this.setState({ uio: uio });
         }
-        console.log("Asked about: " + getVariable("askedAbout"));
-        console.log("Current npc: " + getVariable("current_npc"));
         console.log("All variables: ");
         console.log(getAllVariables());
     }
@@ -58,10 +56,11 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
             var actionEffectsText = this.props.uio.actionEffectsText.split("\n").map(part => <div key={part}>{part}<br /></div>);
             var textToDisplay = this.props.uio.actionEffectsText.length != 0 ? actionEffectsText : descriptionText;
 
+            var title = getVariable("title") === undefined ? "Game title" : getVariable("title")
             return (
                 <ControlGroup vertical={true} fill={true}>
                     <Card elevation={4}>
-                        <Callout title='Weird City Interloper'>
+                        <Callout title={title}>
                             <H4>{getVariable("current_npc")}</H4>
                             <Text>{textToDisplay}</Text>
                         </Callout>

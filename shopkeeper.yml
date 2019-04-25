@@ -1,0 +1,23 @@
+Initialization:
+  - askedForSword := false
+  - gold := 0
+  - grantSword := false
+  - title := 'Shopkeeper example'
+
+Shopkeeper:
+    selector:
+        - condition: askedForSword and gold > 50
+          effects:
+            - grantSword := true
+        - condition: askedForSword
+          effects:
+            - ''
+          effect text: 'You dont have enough gold'
+            
+User Interaction:
+    - description: "The Shopkeeper stands before you. You have gold"
+    - user action:
+        action text: "Ask for sword"
+        effect tree:
+           effects:
+            - askedForSword := true

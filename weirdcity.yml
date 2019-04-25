@@ -1,0 +1,247 @@
+Initialization:
+  - trade := true
+  - asked_about := ''
+  - worship := true
+  - farewell := false
+  - bishop := false
+  - lisa := false
+  - exgods := false
+  - heretics := false
+  - nodroth := false
+  - stenchworks := false
+  - zook := false
+  - orz_npc := 'Orz the City Gate Barnacle'
+  - lisa_npc := 'Lissa Ratdaughter'
+  - lisa_introduced := false
+  - follow_lisa := false
+  - bishop_npc := 'Archnecrobishop Tir'
+  - bishop_introduced := false
+  - zook_npc := 'Zook Spiralhouse'
+  - zook_introduced := false
+  - current_npc := orz_npc
+  - going_to_npc := 'No one'
+
+Orz:
+  condition: current_npc == orz_npc
+  selector:
+    - condition: asked_about == 'trade'
+      selector:
+        - condition: "farewell != true"
+          effect text: "What's that? A letter of introduction to [Archnecrobishop Tir]? Well, I suppose no-one cares what the leader of a dead religion spends his coin on. I'll let you through. [Farewell]."
+          effects:
+            - farewell := true
+            - bishop := true
+        - condition: "farewell"
+          effect text: "Foreign concept to me. They just let me grow here as long as I gobble up the odd undesirable."
+          effects:
+            - ""
+    - condition: asked_about == 'worship'
+      effect text: "Always changing. One lot in, then out, new ones coming up all the time, then driven out or changed beyond recognition. What a palaver."
+      effects:
+        - ""
+    - condition: asked_about == 'bishop'
+      effect text: "He's never passed through here, but he used to get a lot of visitors. You're the first in a long time, mind."
+      effects:
+        - ""
+    - condition: asked_about == 'farewell'
+      effects:
+        - current_npc := lisa_npc
+        - lisa := true
+        - asked_about := 'nothing'
+
+Lissa:
+  condition: current_npc == lisa_npc
+  selector:
+    - condition: asked_about == 'trade'
+      effect text: "Humans throw enough good stuff away in this city that I don't never need to work a day."
+      effects:
+        - ""
+    - condition: asked_about == 'worship'
+      effect text: "Rats don't worship any higher beings. Just feed off their leftovers."
+      effects:
+        - ""
+    - condition: asked_about == 'lisa'
+      effect text: "But I'm right here, boss."
+      effects:
+        - ""
+    - condition: asked_about == 'bishop'
+      selector:
+        - condition: bishop_introduced == false
+          effect text: "That crusty old fogey? You'll find him moping in his crumbling spire, poring over the cobwebbed leftovers of dead and exiled deities. Follow me."
+          effects:
+            - follow_lisa := true
+            - going_to_npc := bishop_npc
+        - condition: bishop_introduced == true
+          effects:
+            - current_npc := bishop_npc
+            - asked_about := 'nothing'
+    - condition: asked_about == 'heretics'
+      effect text: "I don't associate well enough with humans to know too many, but if you're looking to meet people from any walk of life, [Zook Spiralhouse] has probably met them."
+      effects:
+        - zook := true
+    - condition: asked_about == 'stenchworks'
+      effect text: "It don't smell right, that's for sure. Take that from someone who grew up in the sewers and the garbage."
+      effects:
+        - ''
+    - condition: asked_about == 'exgods'
+      effect text: "Nothing, not the most solid monument, not the most beloved god, nothing doesn't wind up rotting away. Only rats remain."
+      effects:
+        - ''
+    - condition: asked_about == 'farewell'
+      effect text: "You don't want to be wandering the rough 'n' tumble streets of a strange city all by your lonesome, boss."
+      effects:
+        - ""
+    - condition: asked_about != 'nothing'
+      effect text: "I don't really know much about that, boss.."
+      effects:
+        - ""
+
+Bishop:
+  condition: current_npc == bishop_npc
+  selector:
+    - condition: asked_about == 'trade'
+      selector:
+        - effect text: "My trade is [worship]."
+          effects:
+            - ""
+    - condition: asked_about == 'worship'
+      effect text: "I worship the [ex gods] through proper and exact mourning. Our prayers can no longer reach them; their favour can no longer fall on our actions; their laws are left unjudged. We honour them by correctly lamenting their absence."
+      effects:
+          - exgods := true
+    - condition: asked_about == 'lisa'
+      effect text: "Forgive me, but such matters are beyond one who dwells in this lonely tower."
+      effects:
+        - ""
+    - condition: asked_about == 'bishop'
+      effect text: "Just an old fool with outdated beliefs who they leave around to appease the [heretics]."
+      effects:
+        - heretics := true
+    - condition: asked_about == 'nodroth'
+      effect text: "Summoned from some dark superplane of existence to topple the city's [ex gods], subjugate its peoples and create a new and unjust order led by an evil priest"
+      effects:
+        - exgods := true
+    - condition: asked_about == 'heretics'
+      effect text: "I've always been quite the opposite of an iconoclast, but perhaps that's what you need right now. If you can find [Zook Spiralhouse], she's always known people from all walks of life."
+      effects:
+        - zook := true
+    - condition: asked_about == 'zook'
+      effect text: "They say few live their whole lives here without meeting Zook Spiralhouse once."
+      effects:
+        - ''
+    - condition: asked_about == 'stenchworks'
+      effect text: "When the wind is unfavourable, the odour reaches me even here. What toil produces such foul vapours, I do not know."
+      effects:
+        - ''
+    - condition: asked_about == 'exgods'
+      effect text: "They may have been bickering, contradictory and impossible, but better that than this single unswerving and terrible unity."
+      effects:
+        - ''
+    - condition: asked_about == 'farewell'
+      effects:
+        - asked_about := 'nothing'
+        - current_npc := lisa_npc
+
+User Interaction:
+  - selector:
+      - condition: current_npc == orz_npc
+        description: "You there! Hooded stranger! Yes, I can talk. Expect us to waste good firegas raising this portcullis for you, eh? What's your business? [Trade] or [worship]?"
+      - condition: current_npc == lisa_npc
+        selector:
+          - condition: lisa_introduced == false
+            sequence:
+              - description: "Pssst! The rat queen sent me. She knows who you are. She knows what you want. And she's on your side.\nMe? I've been scraping a life on these streets all my life. Born, plopped straight out onto the cobbles and left to be raised by the rats. No pocket can't be picked by these fingers; no rumours what can escape these ears; no citizen this nose can't sniff out.\nYou say a name, I'll lead you right to 'em."
+              - effects:
+                  - lisa_introduced := true
+          - description: "Who are we going to see next, boss?"
+      - condition: current_npc == bishop_npc
+        selector:
+          - condition: bishop_introduced == false
+            sequence:
+              - description: "Oh, child! It is you! After all these years, you return to Zendon an adult.\nAnd not a moment too soon. This city suffers under the crushing rule of [Nodroth]. The favoured classes have grown depraved and cruel. And the ordinary men and women must choose to either poison themselves slaving in the [stenchworks] or languish in the slums."
+              - effects:
+                  - bishop_introduced := true
+                  - nodroth := true
+                  - stenchworks := true
+          - description: "It is good to see you, child. I hope your just works are proceeding apace."
+  - selector:
+      - condition: follow_lisa
+        user action:
+          action text: "Follow Lissa"
+          effect tree:
+            effects:
+              - follow_lisa := false
+              - current_npc := going_to_npc
+              - asked_about := 'nothing'
+      - sequence:
+          - condition: "trade"
+            user action:
+              action text: "Trade"
+              effect tree:
+                effects:
+                  - asked_about := 'trade'
+          - condition: "worship"
+            user action:
+              action text: "Worship"
+              effect tree:
+                effects:
+                  - asked_about := 'worship'
+          - condition: "bishop"
+            user action:
+              action text: "Archnecrobishop Tir"
+              effect tree:
+                effects:
+                  - asked_about := 'bishop'
+          - condition: "farewell"
+            user action:
+              action text: "Farewell"
+              effect tree:
+                effects:
+                  - asked_about := 'farewell'
+          - condition: "lisa"
+            user action:
+              action text: "Lissa Ratdaughter"
+              effect tree:
+                effects:
+                  - asked_about := 'lisa'
+          - condition: "nodroth"
+            user action:
+              action text: "Nodroth"
+              effect tree:
+                effects:
+                  - asked_about := 'nodroth'
+          - selector:
+              - condition: heretics
+                user action:
+                  action text: "Heretics"
+                  effect tree:
+                    effects:
+                      - asked_about := 'heretics'
+              - effects:
+                  - ''
+          - selector:
+              - condition: stenchworks
+                user action:
+                  action text: "Stenchworks"
+                  effect tree:
+                    effects:
+                      - asked_about := 'stenchworks'
+              - effects:
+                  - ''
+          - selector:
+              - condition: exgods
+                user action:
+                  action text: "Ex-gods"
+                  effect tree:
+                    effects:
+                      - asked_about := 'exgods'
+              - effects:
+                  - ''
+          - selector:
+              - condition: zook
+                user action:
+                  action text: "Zook Spiralhouse"
+                  effect tree:
+                    effects:
+                      - asked_about := 'zook'
+              - effects:
+                  - ''

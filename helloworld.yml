@@ -1,0 +1,12 @@
+
+Initialization:
+    - name := 'Owais'
+
+User Interaction:
+    - sequence:
+        - description: "Hello $name"
+        - user action:
+            action text: "Say hello Bob"
+            effect tree:
+                effects:
+                    - name := 'Bob'
