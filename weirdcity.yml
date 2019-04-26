@@ -19,7 +19,9 @@ Initialization:
   - zook_npc := 'Zook Spiralhouse'
   - zook_introduced := false
   - current_npc := orz_npc
+  - scene := current_npc
   - going_to_npc := 'No one'
+  - title := 'Weird City Interloper'
 
 Orz:
   condition: current_npc == orz_npc
@@ -142,6 +144,8 @@ Bishop:
         - current_npc := lisa_npc
 
 User Interaction:
+  - effects:
+        - scene := current_npc
   - selector:
       - condition: current_npc == orz_npc
         description: "You there! Hooded stranger! Yes, I can talk. Expect us to waste good firegas raising this portcullis for you, eh? What's your business? [Trade] or [worship]?"

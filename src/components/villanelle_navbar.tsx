@@ -18,7 +18,7 @@ export class VillanelleNavbar extends React.PureComponent<{
         var fileNameText = this.props.unsaved ? "Save " + this.props.currentFile + "*" : this.props.currentFile;
 
         return (
-            <Navbar /* fixedToTop={this.props.fixToTop} */>
+            <Navbar fixedToTop={true}/* fixedToTop={this.props.fixToTop} */>
                 <NavbarGroup align={Alignment.LEFT}>
                     <NavbarHeading>Villanelle</NavbarHeading>
                     <NavbarDivider />

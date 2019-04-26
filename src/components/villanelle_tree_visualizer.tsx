@@ -185,6 +185,9 @@ export class VillanelleTreeVisualizer extends React.Component<{
                 conditionNode.label = this.createDebugIntentForLabel(conditionNode.label, status);
 
                 if (obj['effect text'] !== undefined) {
+                    if (nodeToBuild == undefined) {
+                        nodeToBuild = []
+                    }
                     if (errors[dataPath + '/effect text']) {
                         nodeToBuild.push(this.getErrorTreeNode(errors[dataPath + '/effect text'].message, obj['effect text'] + ''));
                     } else {

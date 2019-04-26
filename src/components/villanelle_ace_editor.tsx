@@ -55,7 +55,8 @@ export class VillanelleAceEditor extends React.Component<{
             name="villanelle_ace_editor"
             value={this.props.code}
             editorProps={{ $blockScrolling: Infinity }}
-            enableLiveAutocompletion={true}
+            enableLiveAutocompletion={false}
+            enableBasicAutocompletion={true}
 
             commands={[
                 {

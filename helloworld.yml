@@ -1,12 +1,29 @@
 
 Initialization:
+    - sayHello := false
+    - sayGoodbye := false
     - name := 'Owais'
-
+    
 User Interaction:
-    - sequence:
-        - description: "Hello $name"
-        - user action:
-            action text: "Say hello Bob"
-            effect tree:
-                effects:
-                    - name := 'Bob'
+    - description: "The world stares at you."
+    - user action:
+        action text: "Say hello world"
+        effect tree:
+            effects:
+                - sayHello := true
+    - user action:
+        action text: "Say goodbye world"
+        effect tree:
+            effects:
+                - sayGoodbye := true
+                    
+World:
+    selector:
+        - condition: sayHello
+          effect text: '"Hello $name." says the world.'
+          effects:
+            - sayHello := false
+        - condition: sayGoodbye
+          effect text: '"Goodbye $name." says the world.'
+          effects:
+            - sayGoodbye := false

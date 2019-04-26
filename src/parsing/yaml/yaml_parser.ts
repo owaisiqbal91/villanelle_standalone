@@ -88,6 +88,11 @@ let schema = {
                 },
                 {
                     if: {
+                        patternRequired: ['effect text']
+                    }, then: { "$ref": "root#/definitions/actionNode" }
+                },
+                {
+                    if: {
                         patternRequired: ['description']
                     }, then: { "$ref": "root#/definitions/descriptionNode" }
                 },
@@ -98,7 +103,7 @@ let schema = {
                 },
                 { then: false }
             ],
-            errorMessage: "Must have a sequence, selector, effects, description or user action keyword"
+            errorMessage: "Must have a sequence, selector, effects, effect text, description or user action keyword"
         },
         sequenceNode: {
             type: "object",
@@ -130,7 +135,7 @@ let schema = {
         },
         actionNode: {
             type: "object",
-            required: ["effects"],
+            required: [], //["effects"],
             properties: {
                 "effects": {
                     type: "array",
@@ -230,6 +235,11 @@ function visitObject(obj: {}, errors: any[], dataPath: string, nodeIdToDatapathM
         let selector = obj['selector'];
         let effects = obj['effects'] !== undefined;
         let effectsText = obj['effect text'] !== undefined;
+
+        if (effectsText && !effects) {
+            obj['effects'] = ['']
+            effects = true
+        }
 
         var conditionLambda: () => boolean = () => true;
         if (condition) {

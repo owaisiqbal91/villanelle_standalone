@@ -67,7 +67,6 @@
     "css-loader": "^2.1.1",
     "electron-compile": "^6.4.4",
     "electron-devtools-installer": "^2.2.4",
-    "electron-prebuilt-compile": "^4.0.0",
     "electron-squirrel-startup": "^1.0.0",
     "html-webpack-plugin": "^3.2.0",
     "js-yaml": "^3.12.1",
@@ -94,6 +93,7 @@
     "electron-builder": "^20.39.0",
     "electron-forge": "^5.2.3",
     "electron-packager": "^13.1.1",
+    "electron-prebuilt-compile": "4.0.0",
     "tslint": "^5.12.0",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.2.3"

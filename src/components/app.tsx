@@ -1,4 +1,4 @@
-import { Callout, Intent } from '@blueprintjs/core';
+import { Callout, Intent, Divider } from '@blueprintjs/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
@@ -32,10 +32,11 @@ export class App extends React.Component<{}, {
 }> {
   constructor(props) {
     super(props);
-    var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/weird_city_interloper.yml"), 'utf8');
+    //var yamlString = fs.readFileSync(path.resolve(__dirname, "../parsing/yaml/weird_city_interloper.yml"), 'utf8');
+    var yamlString = '';
     var initializedObject = this.initializeGame(yamlString);
     this.state = {
-      currentTab: 'Play',
+      currentTab: 'Script',
       code: yamlString,
       errors: this.getErrorsByDataPath(initializedObject.errors),
       doc: initializedObject.doc,
@@ -260,6 +261,15 @@ export class App extends React.Component<{}, {
 
     return (
       <div>
+        <Divider />
+        <Divider />
+        <Divider />
+        <Divider />
+        <Divider />
+        <Divider />
+        <Divider />
+        <Divider />
+        <Divider />
         <VillanelleNavbar
           handler={this.setCurrentTab}
           currentTab={this.state.currentTab}
