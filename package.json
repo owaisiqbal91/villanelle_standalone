@@ -50,7 +50,12 @@
     }
   },
   "build": {
-    "appId": "Villanelle"
+    "appId": "Villanelle",
+    "extraFiles": ["examples"],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": "zip"
+    }
   },
   "dependencies": {
     "@blueprintjs/core": "^3.13.0",
