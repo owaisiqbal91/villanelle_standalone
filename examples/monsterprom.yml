@@ -1,0 +1,125 @@
+Initialization:
+  - Strength := 0
+  - Intelligence := 0
+  - BellaLikesYou := false
+  - BellaAsked := false
+  - JacobineLikesYou := false
+  - JacobineAsked := false
+  - Fangs := false
+  - Fur := false
+  - SharpenTeethAction := false
+  - TransplantHairAction := false
+  - DateFound := false
+
+Bella:
+  selector:
+    - condition: Intelligence >= 4 and Fangs == true #precondition for the action below
+      effects: 
+        - BellaLikesYou := true
+      ticks: 0 #optional
+    - condition: BellaAsked == true #this is a guard for the selector below
+      selector:
+        - condition: Fangs == false
+          effect text: Ew, you don't even have fangs..
+          effects:
+            - BellaAsked := false
+            - SharpenTeethAction := true
+          ticks: 0 #optional
+        - condition: Intelligence < 4
+          effect text: "Sorry, I only like intelligent guys.."
+          effects:
+            - BellaAsked := false
+          ticks: 0
+
+Jacobine:
+  selector:
+    - condition: Strength >= 4 and Fur == true #precondition for the action below
+      effects: 
+        - JacobineLikesYou := true
+      ticks: 0 #optional
+    - condition: JacobineAsked == true #this is a guard for the selector below
+      selector:
+        - condition: Fur == false
+          effect text: "I'm more of a furry type of person.."
+          effects:
+            - JacobineAsked := false
+            - TransplantHairAction := true
+          ticks: 0 #optional
+        - condition: Strength < 4
+          effect text: "You are kinda weak.."
+          effects:
+            - JacobineAsked := false
+          ticks: 0
+
+User Interaction:
+  - condition: DateFound == false
+    sequence:
+      - description: "Prom is approaching! You need to have a date! Bella or Jacobine..."
+      - user action:
+          action text: "Ask Bella the Vampire to Prom"
+          effect tree:
+            selector:
+              - condition: BellaLikesYou == true
+                effect text: 'Bella swoons and turns into a bat. Congratulations, you have a date!'
+                effects:
+                  - DateFound := true
+                ticks: 0
+              - condition: BellaLikesYou == false
+                effects:
+                  - BellaAsked := true
+                ticks: 0
+      - user action:
+          action text: "Ask Jacobine the Werewolf to Prom"
+          effect tree:
+            selector:
+              - condition: JacobineLikesYou == true
+                effect text: 'Jacobine gives a nasty snarl. That means yes in werewolf-speak. Congratulations!'
+                effects:
+                  - DateFound := true
+                ticks: 0
+              - condition: JacobineLikesYou == false
+                effects:
+                  - JacobineAsked := true
+                ticks: 0
+      - user action:
+          action text: "Hit the gym"
+          effect tree:
+            effects:
+              - Strength := Strength + 2
+            effect text:
+              "Your strength improves to $Strength (+2)"
+            ticks: 0
+      - user action:
+          action text: "Hit the library"
+          effect tree:
+            effects:
+              - Intelligence := Intelligence + 2
+            effect text:
+                "Your intelligence improves to $Intelligence (+2)"
+            ticks: 0
+      - selector:
+          - condition: SharpenTeethAction == true
+            user action:
+              action text: "Sharpen your teeth"
+              effect tree:
+                effect text: "You sharpen your teeth into makeshift fangs."
+                effects:
+                  - Fangs := true
+                  - SharpenTeethAction := false
+                ticks: 0
+          - effects:
+              - ''
+            ticks: 0
+      - selector:
+          - condition: TransplantHairAction == true
+            user action:
+              action text: "Transplant hair onto your body"
+              effect tree:
+                effect text: "You become more hairy."
+                effects:
+                  - Fur := true
+                  - TransplantHairAction := false
+                ticks: 0
+          - effects:
+              - ''
+            ticks: 0

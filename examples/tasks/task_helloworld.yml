@@ -1,0 +1,21 @@
+
+Initialization:
+    - sayHello := false
+    - name := 'Owais'
+    
+User Interaction:
+    - description: "The world stares at you."
+    - user action:
+        action text: "Say hello world"
+        effect tree:
+            effects:
+                - sayHello := true
+    # 1. add a goodbye action
+                    
+World:
+    selector:
+        - condition: sayHello
+          effect text: '"Hello $name." says the world.'
+          effects:
+            - sayHello #3. Add logic so both responses are not given
+        # 2. add a goodbye response

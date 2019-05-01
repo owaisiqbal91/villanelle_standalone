@@ -1,0 +1,34 @@
+Initialization:
+  - askedForSword := false
+  - gold := 0
+  - grantSword := false
+  - title := 'Shopkeeper example'
+  - scene := 'With shopkeeper'
+
+Shopkeeper:
+    #Fix the following
+    sequence:
+        - condition: askedForSword and gold >= 50
+          effects:
+            - grantSword := true
+          effect text: 'The Shopkeeper grants you the sword!'
+        - condition: askedForSword and gold < 50
+          effect text: 'You dont have enough gold. You need 50 gold'
+          effects:
+            - askedForSword := false
+            
+User Interaction:
+    - description: "The Shopkeeper stands before you. You have $gold gold."
+    - condition: grantSword == false
+      user action:
+        action text: "Ask for sword"
+        effect tree:
+           effects:
+            - askedForSword := true
+    - condition: grantSword == false
+      user action:
+        action text: "Earn gold"
+        effect tree:
+            effects:
+            - gold := gold + 50
+            effect text: "You have $gold now."

@@ -57,12 +57,13 @@ export class VillanellePlayArea extends React.Component<{ hasErrors: boolean, ui
             var textToDisplay = this.props.uio.actionEffectsText.length != 0 ? actionEffectsText : descriptionText;
 
             var title = getVariable("title") === undefined ? "Game title (use variable 'title')" : getVariable("title")
-            var scene = getVariable("scene") === undefined ? "Scene title (use variable 'scene')" : getVariable("scene")
+            var scene = getVariable("scene") === undefined ? <b>Scene title (use variable 'scene')</b> : <b>{getVariable("scene")}</b>
             return (
                 <ControlGroup vertical={true} fill={true}>
                     <Card elevation={4}>
                         <Callout title={title}>
-                            <H4>{scene}</H4>
+                            {/* <H4>{scene}</H4> */}
+                            {scene}
                             <Text>{textToDisplay}</Text>
                         </Callout>
                     </Card>

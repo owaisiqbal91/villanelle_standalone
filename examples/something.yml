@@ -1,0 +1,32 @@
+Initialization:
+    - character1 := 'c1'
+    - character2 := 'c2'
+    - character1aff := 2
+    - character2aff := 2
+    - character1str := 2
+    - str_spot := true
+    - character1avail := true
+    - character2avail := true
+    - maxStrength := true
+    - maxAffinity := true
+    
+Choose Action:
+    sequence:
+        - effects:
+            - character1avail := true
+        -   condition: character1avail
+            selector: 
+            - condition: str_spot and character1str < maxStrength
+              effects:
+                - character1str := false
+                - character2avail := false
+                - character1aff := character1aff + 1
+                - character2aff := character2aff + 1
+
+User Interaction:
+    - description: "here"
+    - user action:
+        action text: "wait"
+        effect tree:
+            effects:
+                - ''
