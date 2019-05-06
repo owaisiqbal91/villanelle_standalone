@@ -1,4 +1,4 @@
-import { Alignment, Button, Classes, Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from '@blueprintjs/core';
+import { Alignment, Button, Classes, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, ButtonGroup } from '@blueprintjs/core';
 import { ipcRenderer } from 'electron';
 import * as React from 'react';
 
@@ -10,7 +10,8 @@ export class VillanelleNavbar extends React.PureComponent<{
     saveAsHandler: () => void,
     openHandler: () => void,
     currentFile: string,
-    unsaved: boolean
+    unsaved: boolean,
+    reloadGameHandler: () => void
 }> {
 
     public render() {
@@ -25,9 +26,15 @@ export class VillanelleNavbar extends React.PureComponent<{
                     <Button className={Classes.MINIMAL} icon='code' text='Script' active={this.props.currentTab === 'Script'} onClick={() => {
                         this.props.handler('Script');
                     }} />
-                    <Button className={Classes.MINIMAL} icon='citation' text='Play' active={this.props.currentTab === 'Play'} onClick={() => {
-                        this.props.handler('Play');
-                    }} />
+                    <NavbarDivider />
+                    <ButtonGroup>
+                        <Button className={Classes.MINIMAL} icon='citation' text='Play' active={this.props.currentTab === 'Play'} onClick={() => {
+                            this.props.handler('Play');
+                        }} />
+                        <Button className={Classes.MINIMAL} icon='refresh' text='Reload' onClick={() => {
+                            this.props.reloadGameHandler();
+                        }} />
+                    </ButtonGroup>
                 </NavbarGroup>
                 <NavbarGroup align={Alignment.RIGHT}>
                     <Button className={Classes.MINIMAL} text={fileNameText} active={false} onClick={() => {

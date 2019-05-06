@@ -26,9 +26,10 @@ export class App extends React.Component<{}, {
   nodeIdToDatapathMap: {},
   nodeIdStatusMap: {},
   rootNodeDatapaths: string[],
-  currentFile: string
+  currentFile: string,
   fileOpened: boolean,
-  unsaved: boolean
+  unsaved: boolean,
+  currentFilePath: string
 }> {
   constructor(props) {
     super(props);
@@ -45,7 +46,8 @@ export class App extends React.Component<{}, {
       rootNodeDatapaths: initializedObject.rootNodeDatapaths,
       currentFile: "[New file]",
       fileOpened: false,
-      unsaved: false
+      unsaved: false,
+      currentFilePath: ""
     };
 
     this.setCurrentTab = this.setCurrentTab.bind(this);
@@ -54,6 +56,7 @@ export class App extends React.Component<{}, {
     this.saveFile = this.saveFile.bind(this);
     this.saveAsFile = this.saveAsFile.bind(this);
     this.openFile = this.openFile.bind(this);
+    this.reloadGame  = this.reloadGame.bind(this);
 
     // Mousetrap.bind(['command+r', 'ctrl+r', 'f5'], function () {
     //   ipcRenderer.send('reload')
@@ -71,6 +74,10 @@ export class App extends React.Component<{}, {
 
   public setCurrentTab(currentTab) {
     this.setState({ currentTab: currentTab });
+  }
+
+  public reloadGame() {
+    this.setCode(this.state.code)
   }
 
   public setCode(code) {
@@ -91,7 +98,7 @@ export class App extends React.Component<{}, {
       return this.saveAsFile();
     }
 
-    fs.writeFile(this.state.currentFile, this.state.code, (err) => {
+    fs.writeFile(this.state.currentFilePath, this.state.code, (err) => {
       if (err) {
         alert(err);
         console.log(err);
@@ -119,7 +126,12 @@ export class App extends React.Component<{}, {
           return;
         }
         alert("Saved successfully!");
-        this.setState({ currentFile: path.basename(filepath), fileOpened: true, unsaved: false });
+        this.setState({
+          currentFile: path.basename(filepath),
+          fileOpened: true,
+          unsaved: false,
+          currentFilePath: filepath
+        });
       })
     })
   }
@@ -140,7 +152,12 @@ export class App extends React.Component<{}, {
         }
 
         this.setCode(data);
-        this.setState({ currentFile: path.basename(filePath), fileOpened: true, unsaved: false });
+        this.setState({
+          currentFile: path.basename(filePath),
+          fileOpened: true,
+          unsaved: false,
+          currentFilePath: filePath
+        });
       });
     })
   }
@@ -278,7 +295,9 @@ export class App extends React.Component<{}, {
           saveAsHandler={this.saveAsFile}
           openHandler={this.openFile}
           currentFile={this.state.currentFile}
-          unsaved={this.state.unsaved} />
+          unsaved={this.state.unsaved}
+          reloadGameHandler={this.reloadGame}
+        />
         {mainPage}
       </div>
     );
