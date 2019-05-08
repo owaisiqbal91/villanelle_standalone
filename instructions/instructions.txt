@@ -1,0 +1,17 @@
+1. Read through the Villanelle User Guide
+2. Run the Villanelle app
+3. Perform the following tasks:
+
+        Task 1 (open file examples/tasks/1_task_helloworld.yml):
+            This is a simple "Hello World" example where we have an agent named as "World". We have specified the interaction with this agent in the "User Interaction" property, where we define a user action that sets sayHello to true. The "World" agent responds back based on this variable. You would be required to do the following:
+
+            1. Create a goodbye action which will provide the user with a "Say goodbye" choice. Test it out.
+            2. Add a goodbye response to the World agent which will make it respond appropriately to the goodbye action. It might not work as expected after you add the response.
+            3. Fix the effects of both the hello and goodbye response of the world such that you get the desired behavior.
+
+        Task 2 (open file examples/tasks/2_task_shopkeeper.yml):
+            This is an example where you are trying to buy a sword from a shopkeeper. You do not have enough gold and hence you have to earn gold before asking for the sword.
+            1. Test out the game. It does not quite play out as expected. Asking for the sword does nothing. Earning gold immediately gives you the sword. Have a look at the Shopkeeper's behavior tree on the right panel to get a sense of what is wrong.
+            2. This requires a minor fix to the Shopkeeper's code. Remember, there are two control structures in Villanelle: sequence and selector. After you have made the changes, play the game again and check out the difference in the tree of the Shopkeeper.
+
+4. Fill out the survey at https://docs.google.com/forms/d/e/1FAIpQLSeWCJz-bXVUVxyfNv7AeudzqskdUR5yUzI8PWPLomglnBWFtw/viewform?usp=sf_link

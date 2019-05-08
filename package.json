@@ -51,7 +51,7 @@
   },
   "build": {
     "appId": "Villanelle",
-    "extraFiles": ["examples"],
+    "extraFiles": ["examples", "instructions"],
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": "zip"
